@@ -7,3 +7,5 @@ apps/api/data/*.json
 coverage/
 backups/*.json
 *.log
+.atomcode.md
+.dev-notes.md
