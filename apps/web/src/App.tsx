@@ -34,12 +34,28 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showGenerationPopup, setShowGenerationPopup] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     api.getFamily().then(setFamily).catch((reason) => setError(reason.message));
   }, []);
+
+  useEffect(() => {
+    if (!showGenerationPopup) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.topbar__actions, .generation-popover')) {
+        setShowGenerationPopup(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showGenerationPopup]);
 
   const filteredPeople = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -128,10 +144,13 @@ export default function App() {
         familyName: String(form.get("familyName")),
         brandMark: String(form.get("brandMark")),
         subtitle: String(form.get("subtitle")),
-        description: String(form.get("description"))
+        description: String(form.get("description")),
+        generationPoem: String(form.get("generationPoem") || "").trim()
       });
       setFamily(updated);
       setDrawer(null);
+      setNotice("族谱设置已保存");
+      window.setTimeout(() => setNotice(""), 3000);
     } catch (reason) { showError(reason); } finally { setBusy(false); }
   }
 
@@ -170,7 +189,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
+      <header className="topbar relative">
         <button className="icon-button mobile-only" onClick={() => { setDrawer(null); setSelected(undefined); setSidebarOpen(true); }} aria-label="打开成员列表"><Menu /></button>
         <div className="brand">
           <div className="brand__seal">{family.brandMark || family.surname || "枝"}</div>
@@ -180,9 +199,36 @@ export default function App() {
           <span><UsersRound size={16} /> {family.people.length} 位成员</span>
           <span><GitBranch size={16} /> {family.relations.length} 条关系</span>
         </div>
-        <div className="topbar__actions">
+        <div className="topbar__actions relative">
+          {family?.generationPoem && (
+            <button
+              className="button button--soft"
+              onClick={() => setShowGenerationPopup(!showGenerationPopup)}
+              title="查看字辈"
+            >
+              <BookOpenText size={17} /> 字辈
+            </button>
+          )}
           <button className="button button--soft" onClick={() => openDrawer("relation")} disabled={family.people.length < 2}><HeartHandshake size={17} /> 添加关系</button>
           <button className="button button--primary" onClick={openNewPerson}><UserRoundPlus size={17} /> 添加成员</button>
+
+          {family?.generationPoem && showGenerationPopup && (
+            <div className="generation-popover" onClick={(e) => e.stopPropagation()}>
+              <div className="generation-content">
+                {family.generationPoem.split("\n").map((line, lineIndex) => (
+                  <div className="generation-line" key={lineIndex}>
+                    {Array.from(line).map((char, index) =>
+                      /[\u4e00-\u9fa5]/.test(char) ? (
+                        <span key={index} className="char">{char}</span>
+                      ) : (
+                        <span key={index} className="punct">{char}</span>
+                      )
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -278,6 +324,7 @@ export default function App() {
                 <label className="field"><span>族谱名称 *</span><input name="familyName" required defaultValue={family.familyName} /></label>
                 <label className="field"><span>顶部副标题</span><input name="subtitle" maxLength={100} defaultValue={family.subtitle || "电子族谱 · 枝脉相承"} placeholder="例如：电子族谱 · 血脉相承" /></label>
                 <label className="field"><span>族谱简介</span><textarea name="description" rows={5} defaultValue={family.description} /></label>
+                <label className="field"><span>字辈诗文</span><textarea name="generationPoem" rows={3} defaultValue={family.generationPoem} placeholder="例如：源远流长枝脉相承（无需空格，自动按字展示）" /></label>
                 <div className="privacy-note"><strong>隐私提示</strong><p>本项目不会主动上传数据，但导出的备份包含全部成员资料。将仓库公开到 GitHub 时，请勿提交 data 目录中的私人数据。</p></div>
                 <div className="form-actions"><button className="button button--ghost" type="button" onClick={() => setDrawer(null)}>取消</button><button className="button button--primary" disabled={busy}>保存设置</button></div>
               </form>
@@ -286,6 +333,7 @@ export default function App() {
         </div>
       )}
 
+      {notice && !drawer && <div className="toast toast--success">{notice}</div>}
       {error && !drawer && <div className="toast">{error}<button onClick={() => setError("")}><X size={15} /></button></div>}
     </div>
   );

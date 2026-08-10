@@ -35,6 +35,7 @@ export interface FamilyDatabase {
   brandMark: string;
   subtitle: string;
   description: string;
+  generationPoem?: string;
   people: Person[];
   relations: Relation[];
   updatedAt: string;

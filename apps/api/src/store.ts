@@ -8,6 +8,7 @@ const emptyDatabase = (): FamilyDatabase => ({
   brandMark: "枝",
   subtitle: "电子族谱 · 枝脉相承",
   description: "记录家族成员与亲属关系",
+  generationPoem: undefined,
   people: [],
   relations: [],
   updatedAt: new Date().toISOString()

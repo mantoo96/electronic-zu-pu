@@ -15,7 +15,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   getFamily: () => request<FamilyData>("/api/family"),
-  updateFamily: (input: Pick<FamilyData, "surname" | "familyName" | "brandMark" | "subtitle" | "description">) =>
+  updateFamily: (input: Pick<FamilyData, "surname" | "familyName" | "brandMark" | "subtitle" | "description" | "generationPoem">) =>
     request<FamilyData>("/api/family", { method: "PATCH", body: JSON.stringify(input) }),
   createPerson: (input: PersonInput) =>
     request<Person>("/api/people", { method: "POST", body: JSON.stringify(input) }),

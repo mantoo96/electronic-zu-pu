@@ -166,10 +166,82 @@ button { color: inherit; }
 .error-banner button, .toast button { border: 0; background: transparent; cursor: pointer; }
 .toast { position: fixed; right: 20px; bottom: 20px; z-index: 90; display: flex; align-items: center; gap: 15px; padding: 12px 15px; color: white; background: #8e493f; border-radius: 6px; box-shadow: 0 8px 25px rgba(50,20,15,.25); font-size: 12px; }
 .toast button { color: white; }
+.toast--success { background: #2f6b52; }
 .loading-screen { display: grid; place-content: center; height: 100vh; color: #61776e; background: #f1eee5; text-align: center; }
 .loading-screen span { color: #316252; font: 700 40px "Songti SC", "STSong", serif; }
 .loading-screen p { font-size: 12px; }
 .mobile-only { display: none; }
+
+/* 定位上下文：字辈弹层等绝对定位元素依赖该祖先 */
+.relative { position: relative; }
+
+.generation-popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 90;
+  margin-top: 8px;
+  width: max-content;
+  max-width: min(90vw, 480px);
+  max-height: min(70vh, 360px);
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #d8d3c8;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 16px 20px;
+  font-size: 15px;
+  line-height: 1.9;
+  color: #24483d;
+  font-family: "Songti SC", "STSong", serif;
+  letter-spacing: 0.12em;
+}
+
+.generation-popover .generation-line {
+  white-space: nowrap;
+  min-height: 1.7em;
+  margin: 5px 0;
+}
+
+.generation-popover .generation-line:first-child {
+  margin-top: 0;
+}
+
+.generation-popover .generation-line:last-child {
+  margin-bottom: 0;
+}
+
+.generation-popover::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 20px;
+  border: 6px solid transparent;
+  border-bottom-color: #d8d3c8;
+}
+
+.generation-popover .char {
+  display: inline-block;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: #f8f4ee;
+  margin: 0 3px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+/* 标点保留在字间，但不参与字卡展示 */
+.generation-popover .punct {
+  display: inline-block;
+  margin: 0 1px;
+  color: #93a29b;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.generation-popover .char:hover {
+  background: #e8e0d3;
+}
 
 @media (max-width: 800px) {
   .app-shell { grid-template-columns: 1fr; grid-template-rows: 64px 1fr; }

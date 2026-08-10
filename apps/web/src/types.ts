@@ -39,6 +39,7 @@ export interface FamilyData {
   brandMark: string;
   subtitle: string;
   description: string;
+  generationPoem?: string;
   people: Person[];
   relations: Relation[];
   updatedAt: string;
