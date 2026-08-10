@@ -4,3 +4,5 @@ node_modules
 .git
 .DS_Store
 *.log
+apps/api/data/*.json
+backups/*.json

@@ -98,22 +98,60 @@ DATA_FILE=/srv/family-tree/data.json npm start
 | `DELETE` | `/api/relations/:id` | 删除关系 |
 | `POST` | `/api/import` | 导入并覆盖族谱数据 |
 
-## 发布到 GitHub
+## 推送代码到多个平台
+
+本项目支持同时托管在 Gitee、GitHub 与 GitCode 三个平台。约定使用三个远程仓库别名：`origin`（Gitee）、`github`（GitHub）、`gitcode`（GitCode），**`main` 分支每次都要同步推送到全部三个平台**。
+
+### 首次初始化与推送
 
 ```bash
 git init
 git add .
 git commit -m "feat: initial electronic family tree"
 git branch -M main
-git remote add origin https://github.com/你的用户名/你的仓库名.git
-git push -u origin main
+
+# 添加三个平台的远程仓库（替换为你的用户名与仓库名）
+git remote add origin  https://gitee.com/你的用户名/你的仓库名.git
+git remote add github https://github.com/你的用户名/你的仓库名.git
+git remote add gitcode https://gitcode.com/你的用户名/你的仓库名.git
+
+# 依次推送到全部平台
+git push origin main
+git push github main
+git push gitcode main
+```
+
+### 日常推送规则
+
+每次提交后，**三个平台都必须推送**，保持仓库内容一致：
+
+```bash
+git push origin main && git push github main && git push gitcode main
+```
+
+也可以逐条执行、分别观察各平台的推送结果：
+
+```bash
+git push origin main; git push github main; git push gitcode main
+```
+
+如果只想推送到其中某个平台，直接指定对应的 remote 别名即可，例如 `git push github main`。
+
+### 平台认证说明
+
+- **Gitee**：支持用户名 + 密码或私人令牌。
+- **GitHub**：需要 Personal Access Token；国内网络下建议为 git 配置代理后再推送。
+- **GitCode**：**仅支持 Personal Access Token，已移除密码认证**。将令牌存入系统钥匙串后可免密推送（macOS 示例）：
+
+```bash
+printf "protocol=https\nhost=gitcode.com\nusername=你的用户名\npassword=你的令牌\n" | git credential-osxkeychain store
 ```
 
 `apps/api/data/*.json` 已加入 `.gitignore`，避免将真实家人资料误传到公开仓库。示例数据位于单独的 `examples` 目录，内容均为虚构。
 
 ## 隐私和生产安全
 
-当前版本定位为家庭内网或受信任的私人服务器，未内置账号登录。若部署到公网，请至少放在带身份验证的反向代理、VPN 或零信任网关之后，并启用 HTTPS。不要将包含电话、生卒信息等隐私数据的导出文件提交到公开 GitHub 仓库。
+当前版本定位为家庭内网或受信任的私人服务器，未内置账号登录。若部署到公网，请至少放在带身份验证的反向代理、VPN 或零信任网关之后，并启用 HTTPS。不要将包含电话、生卒信息等隐私数据的导出文件提交到任何公开仓库（Gitee / GitHub / GitCode）。
 
 ## 项目结构
 
