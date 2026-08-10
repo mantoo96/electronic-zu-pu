@@ -1,0 +1,23 @@
+{
+  "name": "family-tree",
+  "version": "1.0.0",
+  "private": true,
+  "description": "可私有部署的电子族谱与亲属关系图",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n API,WEB -c blue,green \"npm run dev -w @family-tree/api\" \"npm run dev -w @family-tree/web\"",
+    "build": "npm run build -w @family-tree/api && npm run build -w @family-tree/web",
+    "start": "npm run start -w @family-tree/api",
+    "test": "npm run test -w @family-tree/api && npm run test -w @family-tree/web",
+    "lint": "npm run lint -w @family-tree/api && npm run lint -w @family-tree/web",
+    "demo:generate": "node scripts/generate-demo-data.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

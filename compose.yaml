@@ -1,0 +1,17 @@
+name: family-tree
+
+services:
+  family-tree:
+    build: .
+    container_name: family-tree
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DATA_FILE: /app/apps/api/data/family-tree.json
+    volumes:
+      - family-tree-data:/app/apps/api/data
+
+volumes:
+  family-tree-data:

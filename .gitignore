@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+.env
+apps/api/data/*.json
+!apps/api/data/.gitkeep
+coverage/
+backups/*.json
+*.log

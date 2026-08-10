@@ -1,0 +1,88 @@
+{
+  "surname": "陈",
+  "familyName": "陈氏家族示例",
+  "brandMark": "陈",
+  "subtitle": "电子族谱 · 血脉相承",
+  "description": "用于体验成员录入与关系图展示的虚构数据",
+  "people": [
+    {
+      "id": "chen-yuanshan",
+      "name": "陈远山",
+      "gender": "male",
+      "birthDate": "1948-03-12",
+      "isLiving": true,
+      "location": "浙江杭州",
+      "occupation": "教师",
+      "generation": 1,
+      "biography": "热爱书法与地方史，退休后整理家族旧照片。",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "lin-shuqin",
+      "name": "林淑琴",
+      "gender": "female",
+      "birthDate": "1950-08-20",
+      "isLiving": true,
+      "location": "浙江杭州",
+      "generation": 1,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "chen-ming",
+      "name": "陈明",
+      "gender": "male",
+      "birthDate": "1975-05-06",
+      "isLiving": true,
+      "location": "上海",
+      "occupation": "工程师",
+      "generation": 2,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "chen-xiaoyu",
+      "name": "陈晓雨",
+      "gender": "female",
+      "birthDate": "2002-11-18",
+      "isLiving": true,
+      "location": "上海",
+      "occupation": "学生",
+      "generation": 3,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "relations": [
+    {
+      "id": "relation-spouse-1",
+      "fromPersonId": "chen-yuanshan",
+      "toPersonId": "lin-shuqin",
+      "type": "spouse",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "relation-parent-1",
+      "fromPersonId": "chen-yuanshan",
+      "toPersonId": "chen-ming",
+      "type": "parent",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "relation-parent-2",
+      "fromPersonId": "lin-shuqin",
+      "toPersonId": "chen-ming",
+      "type": "parent",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "relation-parent-3",
+      "fromPersonId": "chen-ming",
+      "toPersonId": "chen-xiaoyu",
+      "type": "parent",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "updatedAt": "2026-01-01T00:00:00.000Z"
+}
