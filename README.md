@@ -60,13 +60,29 @@ docker compose down
 
 启动项目后，在左下角选择“导入数据”，导入 [examples/family-tree.sample.json](examples/family-tree.sample.json)，即可看到一份虚构的三代关系图。
 
-生成并导入 50 人五代测试数据：
+### 50 人五代测试数据
 
 ```bash
 npm run demo:generate -- --import
 ```
 
-生成的文件位于 `examples/family-tree-50.demo.json`。执行导入前请先导出或备份当前真实数据。
+生成的文件位于 `examples/family-tree-50.demo.json`，导入到本机 `localhost:3000`。
+
+### 80 人九代测试数据（近 200 年）
+
+覆盖 1826 至 2025 年、9 代 80 位虚构成员（含 27 位已故成员），适合演示长周期谱系与压力测试：
+
+```bash
+npm run demo:generate-80 -- --import
+```
+
+生成的文件位于 `examples/family-tree-80.demo.json`。若服务运行在其他端口（如 Docker 映射的 `3001`），通过 `--port` 指定：
+
+```bash
+npm run demo:generate-80 -- --import --port 3001
+```
+
+执行导入前请先导出或备份当前真实数据。
 
 ## 数据与备份
 

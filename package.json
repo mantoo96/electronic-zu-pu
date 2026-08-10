@@ -12,7 +12,8 @@
     "start": "npm run start -w @family-tree/api",
     "test": "npm run test -w @family-tree/api && npm run test -w @family-tree/web",
     "lint": "npm run lint -w @family-tree/api && npm run lint -w @family-tree/web",
-    "demo:generate": "node scripts/generate-demo-data.mjs"
+    "demo:generate": "node scripts/generate-demo-data.mjs",
+    "demo:generate-80": "node scripts/generate-demo-data-80.mjs"
   },
   "engines": {
     "node": ">=20"
