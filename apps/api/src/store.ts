@@ -9,6 +9,7 @@ const emptyDatabase = (): FamilyDatabase => ({
   subtitle: "电子族谱 · 枝脉相承",
   description: "记录家族成员与亲属关系",
   generationPoem: undefined,
+  kinshipOverrides: {},
   people: [],
   relations: [],
   updatedAt: new Date().toISOString()
@@ -25,6 +26,7 @@ export class JsonStore {
     return {
       ...emptyDatabase(),
       ...parsed,
+      kinshipOverrides: parsed.kinshipOverrides ?? {},
       people: parsed.people ?? [],
       relations: parsed.relations ?? []
     };

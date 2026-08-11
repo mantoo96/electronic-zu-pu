@@ -40,7 +40,13 @@ export interface FamilyData {
   subtitle: string;
   description: string;
   generationPoem?: string;
+  kinshipOverrides: Record<string, string>;
   people: Person[];
   relations: Relation[];
   updatedAt: string;
+}
+
+export interface AuthStatus {
+  configured: boolean;
+  isAdmin: boolean;
 }

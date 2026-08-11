@@ -10,6 +10,8 @@ services:
     environment:
       PORT: 3000
       DATA_FILE: /app/apps/api/data/family-tree.json
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
     volumes:
       - family-tree-data:/app/apps/api/data
 

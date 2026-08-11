@@ -21,8 +21,9 @@ import type { FamilyData, Person, Relation } from "./types";
 import { nameAvatarText, relationLabels } from "./labels";
 import "@xyflow/react/dist/style.css";
 
-type PersonNode = Node<{ person: Person; selected: boolean }, "person">;
-type JunctionNode = Node<Record<string, never>, "junction">;
+type LayoutDirection = "TB" | "LR";
+type PersonNode = Node<{ person: Person; selected: boolean; selectionOrder?: number; horizontal: boolean }, "person">;
+type JunctionNode = Node<{ horizontal: boolean }, "junction">;
 type FamilyNode = PersonNode | JunctionNode;
 
 function ParentRelationEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style, data }: EdgeProps) {
@@ -34,16 +35,17 @@ function ParentRelationEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosi
     targetY,
     targetPosition
   });
-  const customLabel = (data as { label?: string } | undefined)?.label;
+  const edgeData = data as { label?: string; horizontal?: boolean } | undefined;
+  const customLabel = edgeData?.label;
   return (
     <>
       <BaseEdge id={id} path={edgePath} style={style} />
       <EdgeLabelRenderer>
         <div
-          className="parent-edge-label nodrag nopan"
+          className={`parent-edge-label nodrag nopan ${edgeData?.horizontal ? "is-horizontal" : ""}`}
           style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
         >
-          {customLabel || <><span>父母</span><b>↓</b><span>子女</span></>}
+          {customLabel || <><span>父母</span><b>{edgeData?.horizontal ? "→" : "↓"}</b><span>子女</span></>}
         </div>
       </EdgeLabelRenderer>
     </>
@@ -56,9 +58,14 @@ function PersonCard({ data }: NodeProps<PersonNode>) {
     .filter(Boolean)
     .join(" — ");
   return (
-    <div className={`person-node gender-${person.gender} ${data.selected ? "is-selected" : ""}`}>
-      <Handle type="target" position={Position.Top} id="parent-top" className="node-handle" />
-      <Handle type="target" position={Position.Left} id="spouse-left" className="node-handle node-handle--spouse" />
+    <div className={`person-node gender-${person.gender} ${data.selected ? "is-selected" : ""} ${data.selectionOrder ? "is-kinship-selected" : ""}`}>
+      {data.selectionOrder && <span className="person-node__selection-order">{data.selectionOrder}</span>}
+      {data.horizontal
+        ? <Handle type="target" position={Position.Left} id="parent-left" className="node-handle" />
+        : <>
+          <Handle type="target" position={Position.Top} id="parent-top" className="node-handle" />
+          <Handle type="target" position={Position.Left} id="spouse-left" className="node-handle node-handle--spouse" />
+        </>}
       <div className="person-node__avatar">
         {person.avatar ? <img src={person.avatar} alt="" /> : <span>{nameAvatarText(person.name)}</span>}
       </div>
@@ -67,24 +74,39 @@ function PersonCard({ data }: NodeProps<PersonNode>) {
         <span>{person.occupation || years || "资料待补充"}</span>
         {person.generation !== undefined && <em>第 {person.generation} 代</em>}
       </div>
-      <Handle type="source" position={Position.Right} id="spouse-right" className="node-handle node-handle--spouse" />
-      <Handle type="source" position={Position.Bottom} id="child-bottom" className="node-handle" />
+      {data.horizontal
+        ? <Handle type="source" position={Position.Right} id="child-right" className="node-handle" />
+        : <>
+          <Handle type="source" position={Position.Right} id="spouse-right" className="node-handle node-handle--spouse" />
+          <Handle type="source" position={Position.Bottom} id="child-bottom" className="node-handle" />
+        </>}
     </div>
   );
 }
 
-function FamilyJunction() {
+function FamilyJunction({ data }: NodeProps<JunctionNode>) {
   return (
     <div className="family-junction">
-      <Handle type="target" position={Position.Top} id="parents-in" className="node-handle" />
-      <Handle type="source" position={Position.Bottom} id="children-out" className="node-handle" />
-      <Handle type="target" position={Position.Left} id="bus-left" className="node-handle" />
-      <Handle type="source" position={Position.Right} id="bus-right" className="node-handle" />
+      {data.horizontal ? <>
+        <Handle type="target" position={Position.Left} id="parents-in-left" className="node-handle" />
+        <Handle type="source" position={Position.Right} id="children-out-right" className="node-handle" />
+        <Handle type="target" position={Position.Top} id="bus-top" className="node-handle" />
+        <Handle type="source" position={Position.Bottom} id="bus-bottom" className="node-handle" />
+      </> : <>
+        <Handle type="target" position={Position.Top} id="parents-in" className="node-handle" />
+        <Handle type="source" position={Position.Bottom} id="children-out" className="node-handle" />
+        <Handle type="target" position={Position.Left} id="bus-left" className="node-handle" />
+        <Handle type="source" position={Position.Right} id="bus-right" className="node-handle" />
+      </>}
     </div>
   );
 }
 
-function layoutGraph(data: FamilyData, selectedId?: string) {
+export function layoutGraph(data: FamilyData, selectedId?: string, selectionIds: string[] = [], layoutDirection: LayoutDirection = "TB") {
+  const horizontal = layoutDirection === "LR";
+  const orient = (position: { x: number; y: number }) => horizontal
+    ? { x: position.y * 1.5, y: position.x * 0.38 }
+    : position;
   const graph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
   graph.setGraph({ rankdir: "TB", ranksep: 74, nodesep: 38, marginx: 30, marginy: 30 });
 
@@ -288,6 +310,20 @@ function layoutGraph(data: FamilyData, selectedId?: string) {
     }
   });
 
+  const childFamilyAnchor = (childId: string) => {
+    const childUnit = personToUnit.get(childId);
+    const childUnitPosition = childUnit ? unitPositions.get(childUnit) : undefined;
+    const childPosition = personPositions.get(childId);
+    const hasFamilyJunction = Boolean(childUnit && (unitMembers.get(childUnit)?.length ?? 0) > 1);
+    return {
+      x: hasFamilyJunction && childUnitPosition ? childUnitPosition.x : (childPosition?.x ?? 0) + 105,
+      targetId: hasFamilyJunction ? `junction-${childUnit}` : childId,
+      targetHandle: horizontal
+        ? (hasFamilyJunction ? "parents-in-left" : "parent-left")
+        : (hasFamilyJunction ? "parents-in" : "parent-top")
+    };
+  };
+
   // 一个家庭单元只生成一条父母主干，再从家庭分支点连接所有子女。
   const parentRelationsByUnit = new Map<string, Relation[]>();
   data.relations.filter((relation) => relation.type === "parent").forEach((relation) => {
@@ -308,7 +344,7 @@ function layoutGraph(data: FamilyData, selectedId?: string) {
     [...new Set(relations.map((relation) => relation.toPersonId))].forEach((childId) => {
       const childPosition = personPositions.get(childId);
       if (childPosition) {
-        const branchPosition = { x: childPosition.x + 102, y: hubPosition.y };
+        const branchPosition = { x: childFamilyAnchor(childId).x, y: hubPosition.y };
         if (Math.abs(branchPosition.x - hubPosition.x) > 1) {
           familyBranchPositions.set(`${sourceUnit}-${childId}`, branchPosition);
         }
@@ -319,17 +355,22 @@ function layoutGraph(data: FamilyData, selectedId?: string) {
   const nodes: FamilyNode[] = data.people.map((person) => ({
     id: person.id,
     type: "person",
-    position: personPositions.get(person.id) ?? { x: 0, y: 0 },
-    data: { person, selected: selectedId === person.id }
+    position: orient(personPositions.get(person.id) ?? { x: 0, y: 0 }),
+    data: {
+      person,
+      selected: selectedId === person.id,
+      selectionOrder: selectionIds.includes(person.id) ? selectionIds.indexOf(person.id) + 1 : undefined,
+      horizontal
+    }
   }));
   junctionPositions.forEach((position, unitId) => {
-    nodes.push({ id: `junction-${unitId}`, type: "junction", position, data: {} });
+    nodes.push({ id: `junction-${unitId}`, type: "junction", position: orient(position), data: { horizontal } });
   });
   familyHubPositions.forEach((position, unitId) => {
-    nodes.push({ id: `family-hub-${unitId}`, type: "junction", position, data: {} });
+    nodes.push({ id: `family-hub-${unitId}`, type: "junction", position: orient(position), data: { horizontal } });
   });
   familyBranchPositions.forEach((position, branchId) => {
-    nodes.push({ id: `family-branch-${branchId}`, type: "junction", position, data: {} });
+    nodes.push({ id: `family-branch-${branchId}`, type: "junction", position: orient(position), data: { horizontal } });
   });
 
   const edges: Edge[] = [];
@@ -344,10 +385,10 @@ function layoutGraph(data: FamilyData, selectedId?: string) {
       id: `family-trunk-${sourceUnit}`,
       source,
       target: `family-hub-${sourceUnit}`,
-      sourceHandle: members.length > 1 ? "children-out" : "child-bottom",
-      targetHandle: "parents-in",
+      sourceHandle: horizontal ? (members.length > 1 ? "children-out-right" : "child-right") : (members.length > 1 ? "children-out" : "child-bottom"),
+      targetHandle: horizontal ? "parents-in-left" : "parents-in",
       type: "parent",
-      data: { label: customLabel },
+      data: { label: customLabel, horizontal },
       style: { stroke: "#68897d", strokeWidth: 1.6 },
       labelStyle: { fill: "#496158", fontSize: 11, fontWeight: 600 },
       labelBgStyle: { fill: "#f7f3e9", fillOpacity: 0.92 }
@@ -369,19 +410,20 @@ function layoutGraph(data: FamilyData, selectedId?: string) {
         id: `family-bus-${sourceUnit}-${index}`,
         source: point.id,
         target: nextPoint.id,
-        sourceHandle: "bus-right",
-        targetHandle: "bus-left",
+        sourceHandle: horizontal ? "bus-bottom" : "bus-right",
+        targetHandle: horizontal ? "bus-top" : "bus-left",
         type: "straight",
         style: { stroke: "#68897d", strokeWidth: 1.6 }
       });
     });
     uniqueChildren.forEach((childId) => {
+      const childAnchor = childFamilyAnchor(childId);
       edges.push({
         id: `family-child-${sourceUnit}-${childId}`,
         source: childBranchId(childId),
-        target: childId,
-        sourceHandle: "children-out",
-        targetHandle: "parent-top",
+        target: childAnchor.targetId,
+        sourceHandle: horizontal ? "children-out-right" : "children-out",
+        targetHandle: childAnchor.targetHandle,
         type: "straight",
         style: { stroke: "#68897d", strokeWidth: 1.6 }
       });
@@ -397,11 +439,11 @@ function layoutGraph(data: FamilyData, selectedId?: string) {
       id: relation.id,
       source: spouseReversed ? relation.toPersonId : relation.fromPersonId,
       target: spouseReversed ? relation.fromPersonId : relation.toPersonId,
-      sourceHandle: isSpouse ? "spouse-right" : "child-bottom",
-      targetHandle: isSpouse ? "spouse-left" : "parent-top",
+      sourceHandle: horizontal ? "child-right" : isSpouse ? "spouse-right" : "child-bottom",
+      targetHandle: horizontal ? "parent-left" : isSpouse ? "spouse-left" : "parent-top",
       label: relation.type === "parent" ? undefined : relation.label || relationLabels[relation.type],
       type: relation.type === "parent" ? "parent" : isSpouse ? "straight" : "smoothstep",
-      data: relation.type === "parent" ? { label: relation.label } : undefined,
+      data: relation.type === "parent" ? { label: relation.label, horizontal } : undefined,
       animated: false,
       style: { stroke: isSpouse ? "#b77453" : "#68897d", strokeWidth: 1.6 },
       labelStyle: { fill: "#496158", fontSize: 11, fontWeight: 600 },
@@ -414,11 +456,13 @@ function layoutGraph(data: FamilyData, selectedId?: string) {
 interface Props {
   data: FamilyData;
   selectedId?: string;
+  selectionIds?: string[];
+  layoutDirection?: LayoutDirection;
   onSelect: (person: Person) => void;
 }
 
-export function FamilyGraph({ data, selectedId, onSelect }: Props) {
-  const layout = useMemo(() => layoutGraph(data, selectedId), [data, selectedId]);
+export function FamilyGraph({ data, selectedId, selectionIds = [], layoutDirection = "TB", onSelect }: Props) {
+  const layout = useMemo(() => layoutGraph(data, selectedId, selectionIds, layoutDirection), [data, selectedId, selectionIds, layoutDirection]);
   const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layout.edges);
 

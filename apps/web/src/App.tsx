@@ -5,29 +5,37 @@ import {
   Download,
   GitBranch,
   HeartHandshake,
+  LockKeyhole,
   MapPin,
   Menu,
   Pencil,
   Plus,
   Search,
   Settings2,
+  ShieldCheck,
   Trash2,
   Upload,
   UserRoundPlus,
   UsersRound,
   X
 } from "lucide-react";
-import { api } from "./api";
+import { AdminLoginForm } from "./AdminLoginForm";
+import { api, ApiError } from "./api";
 import { FamilyGraph } from "./FamilyGraph";
+import { KinshipQueryPanel } from "./KinshipQueryPanel";
+import { KinshipTermSettings } from "./KinshipTermSettings";
+import { resolveMutualKinship } from "./kinship";
+import { createLineageView } from "./lineageView";
 import { genderLabels, nameAvatarText, relationLabels } from "./labels";
 import { PersonForm } from "./PersonForm";
 import { RelationForm } from "./RelationForm";
-import type { FamilyData, Person, PersonInput, Relation, RelationInput } from "./types";
+import type { AuthStatus, FamilyData, Person, PersonInput, Relation, RelationInput } from "./types";
 
-type Drawer = "person" | "relation" | "settings" | null;
+type Drawer = "person" | "relation" | "settings" | "auth" | null;
 
 export default function App() {
   const [family, setFamily] = useState<FamilyData | null>(null);
+  const [auth, setAuth] = useState<AuthStatus | null>(null);
   const [selected, setSelected] = useState<Person>();
   const [editing, setEditing] = useState<Person>();
   const [drawer, setDrawer] = useState<Drawer>(null);
@@ -37,10 +45,16 @@ export default function App() {
   const [notice, setNotice] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showGenerationPopup, setShowGenerationPopup] = useState(false);
+  const [kinshipMode, setKinshipMode] = useState(false);
+  const [kinshipSelection, setKinshipSelection] = useState<string[]>([]);
+  const [kinshipDraft, setKinshipDraft] = useState<Record<string, string>>({});
+  const [lineageOnly, setLineageOnly] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    api.getFamily().then(setFamily).catch((reason) => setError(reason.message));
+    Promise.all([api.getFamily(), api.getAuthStatus()])
+      .then(([familyData, authStatus]) => { setFamily(familyData); setAuth(authStatus); })
+      .catch((reason) => setError(reason.message));
   }, []);
 
   useEffect(() => {
@@ -70,20 +84,85 @@ export default function App() {
     return family.relations.filter((relation) => relation.fromPersonId === selected.id || relation.toPersonId === selected.id);
   }, [family, selected]);
 
+  const kinshipPeople = useMemo(() => kinshipSelection.map((id) => family?.people.find((person) => person.id === id)).filter((person): person is Person => Boolean(person)), [family, kinshipSelection]);
+  const kinshipResult = useMemo(() => {
+    if (!family || kinshipSelection.length !== 2) return undefined;
+    return resolveMutualKinship(family, kinshipSelection[0], kinshipSelection[1]);
+  }, [family, kinshipSelection]);
+  const lineageView = useMemo(() => family ? createLineageView(family) : null, [family]);
+  const graphData = lineageOnly && lineageView ? lineageView.data : family;
+  const isAdmin = auth?.isAdmin === true;
+
   function personName(id: string) {
     return family?.people.find((person) => person.id === id)?.name || "未知成员";
   }
 
   function showError(reason: unknown) {
+    if (reason instanceof ApiError && reason.status === 401) {
+      setAuth((current) => ({ configured: current?.configured ?? true, isAdmin: false }));
+      setDrawer("auth");
+    }
     setError(reason instanceof Error ? reason.message : "操作失败，请稍后重试");
   }
 
   function openDrawer(nextDrawer: Exclude<Drawer, null>) {
+    if (nextDrawer !== "auth" && !isAdmin) return;
     setSidebarOpen(false);
+    if (nextDrawer === "settings") setKinshipDraft({ ...(family?.kinshipOverrides || {}) });
     setDrawer(nextDrawer);
   }
 
+  async function loginAdmin(password: string) {
+    setBusy(true);
+    setError("");
+    try {
+      setAuth(await api.login(password));
+      setDrawer(null);
+      setNotice("已进入管理模式");
+      window.setTimeout(() => setNotice(""), 3000);
+    } catch (reason) { showError(reason); } finally { setBusy(false); }
+  }
+
+  async function logoutAdmin() {
+    try {
+      setAuth(await api.logout());
+      setDrawer(null);
+      setEditing(undefined);
+      setNotice("已切换到浏览模式");
+      window.setTimeout(() => setNotice(""), 3000);
+    } catch (reason) { showError(reason); }
+  }
+
+  function toggleKinshipMode() {
+    setDrawer(null);
+    setSelected(undefined);
+    setSidebarOpen(false);
+    setKinshipMode((current) => {
+      if (current) setKinshipSelection([]);
+      return !current;
+    });
+  }
+
+  function selectFromGraph(person: Person) {
+    if (!kinshipMode) {
+      setSelected(person);
+      return;
+    }
+    setKinshipSelection((current) => {
+      if (current.length >= 2) return [person.id];
+      if (current[0] === person.id) return [];
+      return [...current, person.id];
+    });
+  }
+
+  function switchGraphView(nextLineageOnly: boolean) {
+    setLineageOnly(nextLineageOnly);
+    setSelected(undefined);
+    setKinshipSelection([]);
+  }
+
   async function savePerson(input: PersonInput) {
+    if (!isAdmin) return;
     setBusy(true);
     setError("");
     try {
@@ -102,6 +181,7 @@ export default function App() {
   }
 
   async function deletePerson(person: Person) {
+    if (!isAdmin) return;
     if (!window.confirm(`确定删除“${person.name}”吗？与其相连的关系也会一并删除。`)) return;
     setBusy(true);
     try {
@@ -116,6 +196,7 @@ export default function App() {
   }
 
   async function saveRelation(input: RelationInput) {
+    if (!isAdmin) return;
     setBusy(true);
     setError("");
     try {
@@ -126,6 +207,7 @@ export default function App() {
   }
 
   async function deleteRelation(relation: Relation) {
+    if (!isAdmin) return;
     if (!window.confirm("确定删除这条亲属关系吗？")) return;
     try {
       await api.deleteRelation(relation.id);
@@ -135,7 +217,7 @@ export default function App() {
 
   async function saveFamilyInfo(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!family) return;
+    if (!family || !isAdmin) return;
     setBusy(true);
     const form = new FormData(event.currentTarget);
     try {
@@ -145,7 +227,12 @@ export default function App() {
         brandMark: String(form.get("brandMark")),
         subtitle: String(form.get("subtitle")),
         description: String(form.get("description")),
-        generationPoem: String(form.get("generationPoem") || "").trim()
+        generationPoem: String(form.get("generationPoem") || "").trim(),
+        kinshipOverrides: Object.fromEntries(
+          Object.entries(kinshipDraft)
+            .map(([key, value]) => [key, value.trim()] as const)
+            .filter(([, value]) => Boolean(value))
+        )
       });
       setFamily(updated);
       setDrawer(null);
@@ -166,6 +253,7 @@ export default function App() {
   }
 
   async function importData(event: React.ChangeEvent<HTMLInputElement>) {
+    if (!isAdmin) return;
     const file = event.target.files?.[0];
     if (!file || !window.confirm("导入会覆盖当前全部族谱数据，确定继续吗？")) return;
     try {
@@ -173,11 +261,15 @@ export default function App() {
       const imported = await api.importFamily(data);
       setFamily(imported);
       setSelected(undefined);
+      setKinshipMode(false);
+      setKinshipSelection([]);
+      setLineageOnly(false);
     } catch (reason) { showError(reason instanceof SyntaxError ? new Error("文件不是有效的 JSON 数据") : reason); }
     event.target.value = "";
   }
 
   function openNewPerson() {
+    if (!isAdmin) return;
     setSidebarOpen(false);
     setEditing(undefined);
     setDrawer("person");
@@ -200,6 +292,22 @@ export default function App() {
           <span><GitBranch size={16} /> {family.relations.length} 条关系</span>
         </div>
         <div className="topbar__actions relative">
+          <button
+            className={`button button--soft admin-trigger ${isAdmin ? "is-active" : ""}`}
+            onClick={isAdmin ? logoutAdmin : () => openDrawer("auth")}
+            title={isAdmin ? "退出管理模式" : "管理员登录"}
+          >
+            {isAdmin ? <ShieldCheck size={17} /> : <LockKeyhole size={17} />}
+            {isAdmin ? "管理模式" : "浏览"}
+          </button>
+          <button
+            className={`button button--soft kinship-trigger ${kinshipMode ? "is-active" : ""}`}
+            onClick={toggleKinshipMode}
+            disabled={family.people.length < 2}
+            title="在主图中选两个人，查询双方称呼"
+          >
+            <Search size={17} /> {kinshipMode ? "退出查询" : "查称呼"}
+          </button>
           {family?.generationPoem && (
             <button
               className="button button--soft"
@@ -209,8 +317,8 @@ export default function App() {
               <BookOpenText size={17} /> 字辈
             </button>
           )}
-          <button className="button button--soft" onClick={() => openDrawer("relation")} disabled={family.people.length < 2}><HeartHandshake size={17} /> 添加关系</button>
-          <button className="button button--primary" onClick={openNewPerson}><UserRoundPlus size={17} /> 添加成员</button>
+          {isAdmin && <button className="button button--soft" onClick={() => openDrawer("relation")} disabled={family.people.length < 2}><HeartHandshake size={17} /> 添加关系</button>}
+          {isAdmin && <button className="button button--primary" onClick={openNewPerson}><UserRoundPlus size={17} /> 添加成员</button>}
 
           {family?.generationPoem && showGenerationPopup && (
             <div className="generation-popover" onClick={(e) => e.stopPropagation()}>
@@ -251,19 +359,55 @@ export default function App() {
           {!filteredPeople.length && <div className="list-empty">{search ? "没有找到匹配成员" : "尚未添加成员"}</div>}
         </div>
         <div className="sidebar__footer">
-          <button onClick={exportData}><Download size={16} /> 导出备份</button>
-          <button onClick={() => importRef.current?.click()}><Upload size={16} /> 导入数据</button>
-          <button onClick={() => openDrawer("settings")}><Settings2 size={16} /> 族谱设置</button>
+          {isAdmin ? <>
+            <button onClick={exportData}><Download size={16} /> 导出备份</button>
+            <button onClick={() => importRef.current?.click()}><Upload size={16} /> 导入数据</button>
+            <button onClick={() => openDrawer("settings")}><Settings2 size={16} /> 族谱设置</button>
+          </> : <div className="readonly-note"><LockKeyhole size={14} /><span>当前为浏览模式</span></div>}
           <input ref={importRef} type="file" accept="application/json" hidden onChange={importData} />
         </div>
       </aside>
 
       <main className="graph-stage">
         <div className="graph-stage__caption">
-          <span>家族关系全景</span>
-          <small>滚轮缩放 · 拖动画布 · 点击成员查看资料</small>
+          <span>{kinshipMode ? "正在查询称呼" : lineageOnly ? "本家直系脉络" : "家族关系全景"}</span>
+          <small>{kinshipMode
+            ? kinshipSelection.length === 2
+              ? "已显示双方称呼 · 点其他成员可重新开始"
+              : kinshipSelection.length === 1
+                ? "请再点一位成员 · 再点已选成员可取消"
+                : "请依次点击主图中的两位成员"
+            : lineageOnly
+              ? `已隐藏 ${lineageView?.hiddenPersonIds.size || 0} 位对象 · 点击成员查看资料`
+              : "滚轮缩放 · 拖动画布 · 点击成员查看资料"}</small>
         </div>
-        <FamilyGraph data={family} selectedId={selected?.id} onSelect={setSelected} />
+        <div className="graph-view-switch" role="group" aria-label="关系图展示模式">
+          <button type="button" className={!lineageOnly ? "is-active" : ""} onClick={() => switchGraphView(false)}>全谱</button>
+          <button
+            type="button"
+            className={lineageOnly ? "is-active" : ""}
+            onClick={() => switchGraphView(true)}
+            disabled={!lineageView?.spouseRelationCount}
+            title="隐藏对象，仅展示本家上下代关系"
+          >纯直</button>
+        </div>
+        <FamilyGraph
+          key={lineageOnly ? "lineage-left-to-right" : "full-top-to-bottom"}
+          data={graphData || family}
+          selectedId={selected?.id}
+          selectionIds={kinshipMode ? kinshipSelection : []}
+          layoutDirection={lineageOnly ? "LR" : "TB"}
+          onSelect={selectFromGraph}
+        />
+        {kinshipMode && (
+          <KinshipQueryPanel
+            first={kinshipPeople[0]}
+            second={kinshipPeople[1]}
+            result={kinshipResult}
+            onReset={() => setKinshipSelection([])}
+            onClose={() => { setKinshipMode(false); setKinshipSelection([]); }}
+          />
+        )}
       </main>
 
       {selected && (
@@ -273,11 +417,11 @@ export default function App() {
             <div className="detail-avatar">{selected.avatar ? <img src={selected.avatar} alt="" /> : nameAvatarText(selected.name)}</div>
             <div><span>{selected.generation !== undefined ? `第 ${selected.generation} 代` : genderLabels[selected.gender]}</span><h2>{selected.name}</h2><p>{selected.occupation || "家族成员"}</p></div>
           </div>
-          <div className="detail-actions">
+          {isAdmin && <div className="detail-actions">
             <button onClick={() => { setEditing(selected); openDrawer("person"); }}><Pencil size={15} /> 编辑</button>
             <button onClick={() => openDrawer("relation")}><Plus size={15} /> 连接</button>
             <button className="danger" onClick={() => deletePerson(selected)} disabled={busy}><Trash2 size={15} /> 删除</button>
-          </div>
+          </div>}
           <div className="detail-content">
             {(selected.birthDate || selected.deathDate) && <div className="detail-line"><CalendarDays /><div><small>生卒</small><span>{selected.birthDate || "未知"} — {selected.isLiving ? "今" : selected.deathDate || "未知"}</span></div></div>}
             {selected.location && <div className="detail-line"><MapPin /><div><small>居住地</small><span>{selected.location}</span></div></div>}
@@ -289,7 +433,7 @@ export default function App() {
                 return (
                   <div className="relation-row" key={relation.id}>
                     <div><strong>{personName(otherId)}</strong><span>{relation.label || relationLabels[relation.type]}</span></div>
-                    <button onClick={() => deleteRelation(relation)} title="删除关系"><X size={15} /></button>
+                    {isAdmin && <button onClick={() => deleteRelation(relation)} title="删除关系"><X size={15} /></button>}
                   </div>
                 );
               })}
@@ -303,10 +447,11 @@ export default function App() {
         <div className="drawer-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setDrawer(null)}>
           <section className="drawer">
             <header className="drawer__header">
-              <div><span>{drawer === "person" ? "MEMBER" : drawer === "relation" ? "RELATION" : "SETTINGS"}</span><h2>{drawer === "person" ? (editing ? "编辑成员资料" : "添加家族成员") : drawer === "relation" ? "建立亲属关系" : "族谱设置"}</h2></div>
+              <div><span>{drawer === "person" ? "MEMBER" : drawer === "relation" ? "RELATION" : drawer === "settings" ? "SETTINGS" : "ADMIN"}</span><h2>{drawer === "person" ? (editing ? "编辑成员资料" : "添加家族成员") : drawer === "relation" ? "建立亲属关系" : drawer === "settings" ? "族谱设置" : "管理员登录"}</h2></div>
               <button className="icon-button" onClick={() => { setDrawer(null); setEditing(undefined); }}><X /></button>
             </header>
             {error && <div className="error-banner">{error}<button onClick={() => setError("")}><X size={14} /></button></div>}
+            {drawer === "auth" && <AdminLoginForm configured={auth?.configured ?? false} busy={busy} onSubmit={loginAdmin} onCancel={() => { setDrawer(null); setError(""); }} />}
             {drawer === "person" && <PersonForm person={editing} surname={family.surname} busy={busy} onSubmit={savePerson} onCancel={() => setDrawer(null)} />}
             {drawer === "relation" && <RelationForm people={family.people} initialFromId={selected?.id} busy={busy} onSubmit={saveRelation} onCancel={() => setDrawer(null)} />}
             {drawer === "settings" && (
@@ -325,6 +470,7 @@ export default function App() {
                 <label className="field"><span>顶部副标题</span><input name="subtitle" maxLength={100} defaultValue={family.subtitle || "电子族谱 · 枝脉相承"} placeholder="例如：电子族谱 · 血脉相承" /></label>
                 <label className="field"><span>族谱简介</span><textarea name="description" rows={5} defaultValue={family.description} /></label>
                 <label className="field"><span>字辈诗文</span><textarea name="generationPoem" rows={3} defaultValue={family.generationPoem} placeholder="例如：源远流长枝脉相承（无需空格，自动按字展示）" /></label>
+                <KinshipTermSettings value={kinshipDraft} onChange={setKinshipDraft} />
                 <div className="privacy-note"><strong>隐私提示</strong><p>本项目不会主动上传数据，但导出的备份包含全部成员资料。将仓库公开到 GitHub 时，请勿提交 data 目录中的私人数据。</p></div>
                 <div className="form-actions"><button className="button button--ghost" type="button" onClick={() => setDrawer(null)}>取消</button><button className="button button--primary" disabled={busy}>保存设置</button></div>
               </form>

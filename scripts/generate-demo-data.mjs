@@ -106,6 +106,7 @@ const database = {
   brandMark: "陈",
   subtitle: "五代同堂 · 虚构测试数据",
   description: "包含 50 位虚构成员、20 对夫妻和完整父母子女链路，用于展示与压力测试。",
+  kinshipOverrides: {},
   people,
   relations,
   updatedAt: "2026-07-14T00:00:00.000Z"

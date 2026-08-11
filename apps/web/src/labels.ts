@@ -9,7 +9,7 @@ export const genderLabels: Record<Gender, string> = {
 
 export const relationLabels: Record<RelationType, string> = {
   parent: "父母 → 子女",
-  spouse: "配偶",
+  spouse: "对象",
   sibling: "兄弟姐妹",
   adoptive_parent: "养父母 → 养子女",
   guardian: "监护人 → 被监护人",

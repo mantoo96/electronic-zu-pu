@@ -4,6 +4,8 @@
   "brandMark": "陈",
   "subtitle": "九代两百年 · 虚构测试数据",
   "description": "包含 80 位虚构成员、36 对夫妻，覆盖 1826 至 2025 近两百年的九代谱系，含已故成员，用于展示与压力测试。",
+  "generationPoem": "敬宗睦族承先志\n敦本崇文启后贤",
+  "kinshipOverrides": {},
   "people": [
     {
       "id": "demo80-person-01",
@@ -1729,7 +1731,7 @@
     },
     {
       "id": "demo80-relation-045",
-      "fromPersonId": "demo80-person-03",
+      "fromPersonId": "demo80-person-05",
       "toPersonId": "demo80-person-11",
       "type": "parent",
       "label": "",
@@ -1739,7 +1741,7 @@
     },
     {
       "id": "demo80-relation-046",
-      "fromPersonId": "demo80-person-04",
+      "fromPersonId": "demo80-person-06",
       "toPersonId": "demo80-person-11",
       "type": "parent",
       "label": "",
@@ -1749,7 +1751,7 @@
     },
     {
       "id": "demo80-relation-047",
-      "fromPersonId": "demo80-person-05",
+      "fromPersonId": "demo80-person-07",
       "toPersonId": "demo80-person-13",
       "type": "parent",
       "label": "",
@@ -1759,7 +1761,7 @@
     },
     {
       "id": "demo80-relation-048",
-      "fromPersonId": "demo80-person-06",
+      "fromPersonId": "demo80-person-08",
       "toPersonId": "demo80-person-13",
       "type": "parent",
       "label": "",
@@ -1769,7 +1771,7 @@
     },
     {
       "id": "demo80-relation-049",
-      "fromPersonId": "demo80-person-05",
+      "fromPersonId": "demo80-person-07",
       "toPersonId": "demo80-person-15",
       "type": "parent",
       "label": "",
@@ -1779,7 +1781,7 @@
     },
     {
       "id": "demo80-relation-050",
-      "fromPersonId": "demo80-person-06",
+      "fromPersonId": "demo80-person-08",
       "toPersonId": "demo80-person-15",
       "type": "parent",
       "label": "",
@@ -1789,7 +1791,7 @@
     },
     {
       "id": "demo80-relation-051",
-      "fromPersonId": "demo80-person-05",
+      "fromPersonId": "demo80-person-09",
       "toPersonId": "demo80-person-17",
       "type": "parent",
       "label": "",
@@ -1799,7 +1801,7 @@
     },
     {
       "id": "demo80-relation-052",
-      "fromPersonId": "demo80-person-06",
+      "fromPersonId": "demo80-person-10",
       "toPersonId": "demo80-person-17",
       "type": "parent",
       "label": "",
@@ -1809,7 +1811,7 @@
     },
     {
       "id": "demo80-relation-053",
-      "fromPersonId": "demo80-person-05",
+      "fromPersonId": "demo80-person-11",
       "toPersonId": "demo80-person-19",
       "type": "parent",
       "label": "",
@@ -1819,7 +1821,7 @@
     },
     {
       "id": "demo80-relation-054",
-      "fromPersonId": "demo80-person-06",
+      "fromPersonId": "demo80-person-12",
       "toPersonId": "demo80-person-19",
       "type": "parent",
       "label": "",
@@ -1829,7 +1831,7 @@
     },
     {
       "id": "demo80-relation-055",
-      "fromPersonId": "demo80-person-07",
+      "fromPersonId": "demo80-person-13",
       "toPersonId": "demo80-person-21",
       "type": "parent",
       "label": "",
@@ -1839,7 +1841,7 @@
     },
     {
       "id": "demo80-relation-056",
-      "fromPersonId": "demo80-person-08",
+      "fromPersonId": "demo80-person-14",
       "toPersonId": "demo80-person-21",
       "type": "parent",
       "label": "",
@@ -1849,7 +1851,7 @@
     },
     {
       "id": "demo80-relation-057",
-      "fromPersonId": "demo80-person-07",
+      "fromPersonId": "demo80-person-13",
       "toPersonId": "demo80-person-23",
       "type": "parent",
       "label": "",
@@ -1859,7 +1861,7 @@
     },
     {
       "id": "demo80-relation-058",
-      "fromPersonId": "demo80-person-08",
+      "fromPersonId": "demo80-person-14",
       "toPersonId": "demo80-person-23",
       "type": "parent",
       "label": "",
@@ -1869,7 +1871,7 @@
     },
     {
       "id": "demo80-relation-059",
-      "fromPersonId": "demo80-person-07",
+      "fromPersonId": "demo80-person-15",
       "toPersonId": "demo80-person-25",
       "type": "parent",
       "label": "",
@@ -1879,7 +1881,7 @@
     },
     {
       "id": "demo80-relation-060",
-      "fromPersonId": "demo80-person-08",
+      "fromPersonId": "demo80-person-16",
       "toPersonId": "demo80-person-25",
       "type": "parent",
       "label": "",
@@ -1889,7 +1891,7 @@
     },
     {
       "id": "demo80-relation-061",
-      "fromPersonId": "demo80-person-07",
+      "fromPersonId": "demo80-person-17",
       "toPersonId": "demo80-person-27",
       "type": "parent",
       "label": "",
@@ -1899,7 +1901,7 @@
     },
     {
       "id": "demo80-relation-062",
-      "fromPersonId": "demo80-person-08",
+      "fromPersonId": "demo80-person-18",
       "toPersonId": "demo80-person-27",
       "type": "parent",
       "label": "",
@@ -1909,7 +1911,7 @@
     },
     {
       "id": "demo80-relation-063",
-      "fromPersonId": "demo80-person-07",
+      "fromPersonId": "demo80-person-19",
       "toPersonId": "demo80-person-29",
       "type": "parent",
       "label": "",
@@ -1919,7 +1921,7 @@
     },
     {
       "id": "demo80-relation-064",
-      "fromPersonId": "demo80-person-08",
+      "fromPersonId": "demo80-person-20",
       "toPersonId": "demo80-person-29",
       "type": "parent",
       "label": "",
@@ -1929,7 +1931,7 @@
     },
     {
       "id": "demo80-relation-065",
-      "fromPersonId": "demo80-person-09",
+      "fromPersonId": "demo80-person-21",
       "toPersonId": "demo80-person-31",
       "type": "parent",
       "label": "",
@@ -1939,7 +1941,7 @@
     },
     {
       "id": "demo80-relation-066",
-      "fromPersonId": "demo80-person-10",
+      "fromPersonId": "demo80-person-22",
       "toPersonId": "demo80-person-31",
       "type": "parent",
       "label": "",
@@ -1949,7 +1951,7 @@
     },
     {
       "id": "demo80-relation-067",
-      "fromPersonId": "demo80-person-09",
+      "fromPersonId": "demo80-person-21",
       "toPersonId": "demo80-person-33",
       "type": "parent",
       "label": "",
@@ -1959,7 +1961,7 @@
     },
     {
       "id": "demo80-relation-068",
-      "fromPersonId": "demo80-person-10",
+      "fromPersonId": "demo80-person-22",
       "toPersonId": "demo80-person-33",
       "type": "parent",
       "label": "",
@@ -1969,7 +1971,7 @@
     },
     {
       "id": "demo80-relation-069",
-      "fromPersonId": "demo80-person-09",
+      "fromPersonId": "demo80-person-23",
       "toPersonId": "demo80-person-35",
       "type": "parent",
       "label": "",
@@ -1979,7 +1981,7 @@
     },
     {
       "id": "demo80-relation-070",
-      "fromPersonId": "demo80-person-10",
+      "fromPersonId": "demo80-person-24",
       "toPersonId": "demo80-person-35",
       "type": "parent",
       "label": "",
@@ -1989,7 +1991,7 @@
     },
     {
       "id": "demo80-relation-071",
-      "fromPersonId": "demo80-person-09",
+      "fromPersonId": "demo80-person-25",
       "toPersonId": "demo80-person-37",
       "type": "parent",
       "label": "",
@@ -1999,7 +2001,7 @@
     },
     {
       "id": "demo80-relation-072",
-      "fromPersonId": "demo80-person-10",
+      "fromPersonId": "demo80-person-26",
       "toPersonId": "demo80-person-37",
       "type": "parent",
       "label": "",
@@ -2009,7 +2011,7 @@
     },
     {
       "id": "demo80-relation-073",
-      "fromPersonId": "demo80-person-09",
+      "fromPersonId": "demo80-person-27",
       "toPersonId": "demo80-person-39",
       "type": "parent",
       "label": "",
@@ -2019,7 +2021,7 @@
     },
     {
       "id": "demo80-relation-074",
-      "fromPersonId": "demo80-person-10",
+      "fromPersonId": "demo80-person-28",
       "toPersonId": "demo80-person-39",
       "type": "parent",
       "label": "",
@@ -2029,7 +2031,7 @@
     },
     {
       "id": "demo80-relation-075",
-      "fromPersonId": "demo80-person-09",
+      "fromPersonId": "demo80-person-29",
       "toPersonId": "demo80-person-41",
       "type": "parent",
       "label": "",
@@ -2039,7 +2041,7 @@
     },
     {
       "id": "demo80-relation-076",
-      "fromPersonId": "demo80-person-10",
+      "fromPersonId": "demo80-person-30",
       "toPersonId": "demo80-person-41",
       "type": "parent",
       "label": "",
@@ -2049,7 +2051,7 @@
     },
     {
       "id": "demo80-relation-077",
-      "fromPersonId": "demo80-person-11",
+      "fromPersonId": "demo80-person-31",
       "toPersonId": "demo80-person-43",
       "type": "parent",
       "label": "",
@@ -2059,7 +2061,7 @@
     },
     {
       "id": "demo80-relation-078",
-      "fromPersonId": "demo80-person-12",
+      "fromPersonId": "demo80-person-32",
       "toPersonId": "demo80-person-43",
       "type": "parent",
       "label": "",
@@ -2069,7 +2071,7 @@
     },
     {
       "id": "demo80-relation-079",
-      "fromPersonId": "demo80-person-11",
+      "fromPersonId": "demo80-person-31",
       "toPersonId": "demo80-person-45",
       "type": "parent",
       "label": "",
@@ -2079,7 +2081,7 @@
     },
     {
       "id": "demo80-relation-080",
-      "fromPersonId": "demo80-person-12",
+      "fromPersonId": "demo80-person-32",
       "toPersonId": "demo80-person-45",
       "type": "parent",
       "label": "",
@@ -2089,7 +2091,7 @@
     },
     {
       "id": "demo80-relation-081",
-      "fromPersonId": "demo80-person-11",
+      "fromPersonId": "demo80-person-33",
       "toPersonId": "demo80-person-47",
       "type": "parent",
       "label": "",
@@ -2099,7 +2101,7 @@
     },
     {
       "id": "demo80-relation-082",
-      "fromPersonId": "demo80-person-12",
+      "fromPersonId": "demo80-person-34",
       "toPersonId": "demo80-person-47",
       "type": "parent",
       "label": "",
@@ -2109,7 +2111,7 @@
     },
     {
       "id": "demo80-relation-083",
-      "fromPersonId": "demo80-person-11",
+      "fromPersonId": "demo80-person-35",
       "toPersonId": "demo80-person-49",
       "type": "parent",
       "label": "",
@@ -2119,7 +2121,7 @@
     },
     {
       "id": "demo80-relation-084",
-      "fromPersonId": "demo80-person-12",
+      "fromPersonId": "demo80-person-36",
       "toPersonId": "demo80-person-49",
       "type": "parent",
       "label": "",
@@ -2129,7 +2131,7 @@
     },
     {
       "id": "demo80-relation-085",
-      "fromPersonId": "demo80-person-11",
+      "fromPersonId": "demo80-person-37",
       "toPersonId": "demo80-person-51",
       "type": "parent",
       "label": "",
@@ -2139,7 +2141,7 @@
     },
     {
       "id": "demo80-relation-086",
-      "fromPersonId": "demo80-person-12",
+      "fromPersonId": "demo80-person-38",
       "toPersonId": "demo80-person-51",
       "type": "parent",
       "label": "",
@@ -2149,7 +2151,7 @@
     },
     {
       "id": "demo80-relation-087",
-      "fromPersonId": "demo80-person-11",
+      "fromPersonId": "demo80-person-39",
       "toPersonId": "demo80-person-53",
       "type": "parent",
       "label": "",
@@ -2159,7 +2161,7 @@
     },
     {
       "id": "demo80-relation-088",
-      "fromPersonId": "demo80-person-12",
+      "fromPersonId": "demo80-person-40",
       "toPersonId": "demo80-person-53",
       "type": "parent",
       "label": "",
@@ -2169,7 +2171,7 @@
     },
     {
       "id": "demo80-relation-089",
-      "fromPersonId": "demo80-person-11",
+      "fromPersonId": "demo80-person-41",
       "toPersonId": "demo80-person-55",
       "type": "parent",
       "label": "",
@@ -2179,7 +2181,7 @@
     },
     {
       "id": "demo80-relation-090",
-      "fromPersonId": "demo80-person-12",
+      "fromPersonId": "demo80-person-42",
       "toPersonId": "demo80-person-55",
       "type": "parent",
       "label": "",
@@ -2189,7 +2191,7 @@
     },
     {
       "id": "demo80-relation-091",
-      "fromPersonId": "demo80-person-13",
+      "fromPersonId": "demo80-person-43",
       "toPersonId": "demo80-person-57",
       "type": "parent",
       "label": "",
@@ -2199,7 +2201,7 @@
     },
     {
       "id": "demo80-relation-092",
-      "fromPersonId": "demo80-person-14",
+      "fromPersonId": "demo80-person-44",
       "toPersonId": "demo80-person-57",
       "type": "parent",
       "label": "",
@@ -2209,7 +2211,7 @@
     },
     {
       "id": "demo80-relation-093",
-      "fromPersonId": "demo80-person-13",
+      "fromPersonId": "demo80-person-43",
       "toPersonId": "demo80-person-59",
       "type": "parent",
       "label": "",
@@ -2219,7 +2221,7 @@
     },
     {
       "id": "demo80-relation-094",
-      "fromPersonId": "demo80-person-14",
+      "fromPersonId": "demo80-person-44",
       "toPersonId": "demo80-person-59",
       "type": "parent",
       "label": "",
@@ -2229,7 +2231,7 @@
     },
     {
       "id": "demo80-relation-095",
-      "fromPersonId": "demo80-person-13",
+      "fromPersonId": "demo80-person-45",
       "toPersonId": "demo80-person-61",
       "type": "parent",
       "label": "",
@@ -2239,7 +2241,7 @@
     },
     {
       "id": "demo80-relation-096",
-      "fromPersonId": "demo80-person-14",
+      "fromPersonId": "demo80-person-46",
       "toPersonId": "demo80-person-61",
       "type": "parent",
       "label": "",
@@ -2249,7 +2251,7 @@
     },
     {
       "id": "demo80-relation-097",
-      "fromPersonId": "demo80-person-13",
+      "fromPersonId": "demo80-person-47",
       "toPersonId": "demo80-person-63",
       "type": "parent",
       "label": "",
@@ -2259,7 +2261,7 @@
     },
     {
       "id": "demo80-relation-098",
-      "fromPersonId": "demo80-person-14",
+      "fromPersonId": "demo80-person-48",
       "toPersonId": "demo80-person-63",
       "type": "parent",
       "label": "",
@@ -2269,7 +2271,7 @@
     },
     {
       "id": "demo80-relation-099",
-      "fromPersonId": "demo80-person-13",
+      "fromPersonId": "demo80-person-49",
       "toPersonId": "demo80-person-65",
       "type": "parent",
       "label": "",
@@ -2279,7 +2281,7 @@
     },
     {
       "id": "demo80-relation-100",
-      "fromPersonId": "demo80-person-14",
+      "fromPersonId": "demo80-person-50",
       "toPersonId": "demo80-person-65",
       "type": "parent",
       "label": "",
@@ -2289,7 +2291,7 @@
     },
     {
       "id": "demo80-relation-101",
-      "fromPersonId": "demo80-person-13",
+      "fromPersonId": "demo80-person-51",
       "toPersonId": "demo80-person-67",
       "type": "parent",
       "label": "",
@@ -2299,7 +2301,7 @@
     },
     {
       "id": "demo80-relation-102",
-      "fromPersonId": "demo80-person-14",
+      "fromPersonId": "demo80-person-52",
       "toPersonId": "demo80-person-67",
       "type": "parent",
       "label": "",
@@ -2309,7 +2311,7 @@
     },
     {
       "id": "demo80-relation-103",
-      "fromPersonId": "demo80-person-13",
+      "fromPersonId": "demo80-person-53",
       "toPersonId": "demo80-person-69",
       "type": "parent",
       "label": "",
@@ -2319,7 +2321,7 @@
     },
     {
       "id": "demo80-relation-104",
-      "fromPersonId": "demo80-person-14",
+      "fromPersonId": "demo80-person-54",
       "toPersonId": "demo80-person-69",
       "type": "parent",
       "label": "",
@@ -2329,7 +2331,7 @@
     },
     {
       "id": "demo80-relation-105",
-      "fromPersonId": "demo80-person-13",
+      "fromPersonId": "demo80-person-55",
       "toPersonId": "demo80-person-71",
       "type": "parent",
       "label": "",
@@ -2339,7 +2341,7 @@
     },
     {
       "id": "demo80-relation-106",
-      "fromPersonId": "demo80-person-14",
+      "fromPersonId": "demo80-person-56",
       "toPersonId": "demo80-person-71",
       "type": "parent",
       "label": "",
@@ -2349,7 +2351,7 @@
     },
     {
       "id": "demo80-relation-107",
-      "fromPersonId": "demo80-person-15",
+      "fromPersonId": "demo80-person-57",
       "toPersonId": "demo80-person-73",
       "type": "parent",
       "label": "",
@@ -2359,7 +2361,7 @@
     },
     {
       "id": "demo80-relation-108",
-      "fromPersonId": "demo80-person-16",
+      "fromPersonId": "demo80-person-58",
       "toPersonId": "demo80-person-73",
       "type": "parent",
       "label": "",
@@ -2369,7 +2371,7 @@
     },
     {
       "id": "demo80-relation-109",
-      "fromPersonId": "demo80-person-15",
+      "fromPersonId": "demo80-person-59",
       "toPersonId": "demo80-person-74",
       "type": "parent",
       "label": "",
@@ -2379,7 +2381,7 @@
     },
     {
       "id": "demo80-relation-110",
-      "fromPersonId": "demo80-person-16",
+      "fromPersonId": "demo80-person-60",
       "toPersonId": "demo80-person-74",
       "type": "parent",
       "label": "",
@@ -2389,7 +2391,7 @@
     },
     {
       "id": "demo80-relation-111",
-      "fromPersonId": "demo80-person-15",
+      "fromPersonId": "demo80-person-61",
       "toPersonId": "demo80-person-75",
       "type": "parent",
       "label": "",
@@ -2399,7 +2401,7 @@
     },
     {
       "id": "demo80-relation-112",
-      "fromPersonId": "demo80-person-16",
+      "fromPersonId": "demo80-person-62",
       "toPersonId": "demo80-person-75",
       "type": "parent",
       "label": "",
@@ -2409,7 +2411,7 @@
     },
     {
       "id": "demo80-relation-113",
-      "fromPersonId": "demo80-person-15",
+      "fromPersonId": "demo80-person-63",
       "toPersonId": "demo80-person-76",
       "type": "parent",
       "label": "",
@@ -2419,7 +2421,7 @@
     },
     {
       "id": "demo80-relation-114",
-      "fromPersonId": "demo80-person-16",
+      "fromPersonId": "demo80-person-64",
       "toPersonId": "demo80-person-76",
       "type": "parent",
       "label": "",
@@ -2429,7 +2431,7 @@
     },
     {
       "id": "demo80-relation-115",
-      "fromPersonId": "demo80-person-15",
+      "fromPersonId": "demo80-person-65",
       "toPersonId": "demo80-person-77",
       "type": "parent",
       "label": "",
@@ -2439,7 +2441,7 @@
     },
     {
       "id": "demo80-relation-116",
-      "fromPersonId": "demo80-person-16",
+      "fromPersonId": "demo80-person-66",
       "toPersonId": "demo80-person-77",
       "type": "parent",
       "label": "",
@@ -2449,7 +2451,7 @@
     },
     {
       "id": "demo80-relation-117",
-      "fromPersonId": "demo80-person-15",
+      "fromPersonId": "demo80-person-67",
       "toPersonId": "demo80-person-78",
       "type": "parent",
       "label": "",
@@ -2459,7 +2461,7 @@
     },
     {
       "id": "demo80-relation-118",
-      "fromPersonId": "demo80-person-16",
+      "fromPersonId": "demo80-person-68",
       "toPersonId": "demo80-person-78",
       "type": "parent",
       "label": "",
@@ -2469,7 +2471,7 @@
     },
     {
       "id": "demo80-relation-119",
-      "fromPersonId": "demo80-person-15",
+      "fromPersonId": "demo80-person-69",
       "toPersonId": "demo80-person-79",
       "type": "parent",
       "label": "",
@@ -2479,7 +2481,7 @@
     },
     {
       "id": "demo80-relation-120",
-      "fromPersonId": "demo80-person-16",
+      "fromPersonId": "demo80-person-70",
       "toPersonId": "demo80-person-79",
       "type": "parent",
       "label": "",
@@ -2489,7 +2491,7 @@
     },
     {
       "id": "demo80-relation-121",
-      "fromPersonId": "demo80-person-15",
+      "fromPersonId": "demo80-person-71",
       "toPersonId": "demo80-person-80",
       "type": "parent",
       "label": "",
@@ -2499,7 +2501,7 @@
     },
     {
       "id": "demo80-relation-122",
-      "fromPersonId": "demo80-person-16",
+      "fromPersonId": "demo80-person-72",
       "toPersonId": "demo80-person-80",
       "type": "parent",
       "label": "",

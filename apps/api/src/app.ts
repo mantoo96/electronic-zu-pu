@@ -6,22 +6,31 @@ import { ZodError } from "zod";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { familyInfoSchema, personInputSchema, relationInputSchema } from "./schemas.js";
+import { createAdminAuth, type AdminAuthOptions } from "./auth.js";
 import { JsonStore } from "./store.js";
 import type { Person, Relation } from "./types.js";
 
 const symmetricRelations = new Set(["spouse", "sibling"]);
 
-export function createApp(store: JsonStore) {
+export function createApp(store: JsonStore, authOptions: AdminAuthOptions = {}) {
   const app = express();
+  const auth = createAdminAuth(authOptions);
+  app.set("trust proxy", 1);
   app.use(helmet({ crossOriginResourcePolicy: false }));
   app.use(cors());
   app.use(express.json({ limit: "1mb" }));
 
   app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 
+  app.get("/api/auth/status", auth.status);
+  app.post("/api/auth/login", auth.login);
+  app.post("/api/auth/logout", auth.logout);
+
   app.get("/api/family", async (_req, res, next) => {
     try { res.json(await store.read()); } catch (error) { next(error); }
   });
+
+  app.use("/api", auth.requireAdmin);
 
   app.patch("/api/family", async (req, res, next) => {
     try {
@@ -124,6 +133,10 @@ export function createApp(store: JsonStore) {
         brandMark: String(body.brandMark || "枝").slice(0, 2),
         subtitle: String(body.subtitle || "电子族谱 · 枝脉相承"),
         description: String(body.description || ""),
+        generationPoem: String(body.generationPoem || ""),
+        kinshipOverrides: body.kinshipOverrides && typeof body.kinshipOverrides === "object" && !Array.isArray(body.kinshipOverrides)
+          ? Object.fromEntries(Object.entries(body.kinshipOverrides).map(([key, value]) => [String(key).slice(0, 100), String(value).slice(0, 40)]))
+          : {},
         people: body.people,
         relations: body.relations,
         updatedAt: new Date().toISOString()

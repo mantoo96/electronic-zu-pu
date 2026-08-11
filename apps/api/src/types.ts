@@ -36,6 +36,7 @@ export interface FamilyDatabase {
   subtitle: string;
   description: string;
   generationPoem?: string;
+  kinshipOverrides: Record<string, string>;
   people: Person[];
   relations: Relation[];
   updatedAt: string;

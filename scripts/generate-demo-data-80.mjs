@@ -189,7 +189,8 @@ for (let gen = 1; gen <= 8; gen += 1) {
     const take = base + extra;
     const children = nextGenBloodIds.slice(start, start + take);
     start += take;
-    if (children.length) families.push([couples[gen - 1][0], couples[gen - 1][1], children]);
+    const father = genStartId[gen] + c * 2;
+    if (children.length) families.push([father, father + 1, children]);
   }
 }
 families.forEach(([father, mother, children]) => {
@@ -199,6 +200,20 @@ families.forEach(([father, mother, children]) => {
   });
 });
 
+// 写入前校验代际关系，避免错误索引生成跨代父母或不同代对象。
+const peopleById = new Map(people.map((person) => [person.id, person]));
+const invalidGenerationRelations = relations.filter((relation) => {
+  const from = peopleById.get(relation.fromPersonId);
+  const to = peopleById.get(relation.toPersonId);
+  if (!from || !to) return true;
+  if (relation.type === "parent") return to.generation !== from.generation + 1;
+  if (relation.type === "spouse") return to.generation !== from.generation;
+  return false;
+});
+if (invalidGenerationRelations.length) {
+  throw new Error(`演示数据包含 ${invalidGenerationRelations.length} 条代际异常关系`);
+}
+
 // ---------- 输出 ----------
 const database = {
   surname: "陈",
@@ -206,6 +221,8 @@ const database = {
   brandMark: "陈",
   subtitle: "九代两百年 · 虚构测试数据",
   description: "包含 80 位虚构成员、36 对夫妻，覆盖 1826 至 2025 近两百年的九代谱系，含已故成员，用于展示与压力测试。",
+  generationPoem: "敬宗睦族承先志\n敦本崇文启后贤",
+  kinshipOverrides: {},
   people,
   relations,
   updatedAt: "2026-08-01T08:00:00.000Z"

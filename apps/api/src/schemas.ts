@@ -34,5 +34,6 @@ export const familyInfoSchema = z.object({
   brandMark: z.string().trim().min(1).max(2).default("枝"),
   subtitle: z.string().trim().max(100).default("电子族谱 · 枝脉相承"),
   description: z.string().trim().max(1000),
-  generationPoem: z.string().trim().max(200).optional().or(z.literal(""))
+  generationPoem: z.string().trim().max(200).optional().or(z.literal("")),
+  kinshipOverrides: z.record(z.string().max(100), z.string().trim().max(40)).optional()
 });
