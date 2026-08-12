@@ -90,8 +90,12 @@ describe("family tree API", () => {
   it("allows viewing but rejects mutations until an administrator logs in", async () => {
     const app = await testApp();
     expect((await request(app).get("/api/family")).status).toBe(200);
-    expect((await request(app).post("/api/people").send({ name: "访客修改", gender: "unknown", isLiving: true })).status).toBe(401);
-    expect((await request(app).post("/api/auth/login").send({ password: "wrong-password" })).status).toBe(401);
+    const unauthorized = await request(app).post("/api/people").send({ name: "访客修改", gender: "unknown", isLiving: true });
+    expect(unauthorized.status).toBe(401);
+    expect(unauthorized.body.code).toBe("ADMIN_REQUIRED");
+    const invalidLogin = await request(app).post("/api/auth/login").send({ password: "wrong-password" });
+    expect(invalidLogin.status).toBe(401);
+    expect(invalidLogin.body.code).toBe("INVALID_ADMIN_PASSWORD");
 
     const agent = await loggedInAgent(app);
     expect((await agent.get("/api/auth/status")).body.isAdmin).toBe(true);
@@ -104,7 +108,17 @@ describe("family tree API", () => {
     const app = await testApp(false);
     const status = await request(app).get("/api/auth/status");
     expect(status.body).toEqual({ configured: false, isAdmin: false });
-    expect((await request(app).post("/api/auth/login").send({ password: "anything" })).status).toBe(503);
+    const login = await request(app).post("/api/auth/login").send({ password: "anything" });
+    expect(login.status).toBe(503);
+    expect(login.body.code).toBe("ADMIN_NOT_CONFIGURED");
     expect((await request(app).patch("/api/family").send({})).status).toBe(503);
+  });
+
+  it("returns stable codes for validation errors", async () => {
+    const app = await testApp();
+    const agent = await loggedInAgent(app);
+    const response = await agent.post("/api/people").send({ name: "", gender: "unknown", isLiving: true });
+    expect(response.status).toBe(400);
+    expect(response.body.code).toBe("VALIDATION_ERROR");
   });
 });

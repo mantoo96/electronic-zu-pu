@@ -81,12 +81,12 @@ export function createAdminAuth(options: AdminAuthOptions = {}) {
 
   function login(request: Request, response: Response) {
     response.setHeader("Cache-Control", "no-store");
-    if (!configured) return response.status(503).json({ message: "管理员密码尚未配置，请先设置 ADMIN_PASSWORD" });
+    if (!configured) return response.status(503).json({ code: "ADMIN_NOT_CONFIGURED", message: "管理员密码尚未配置，请先设置 ADMIN_PASSWORD" });
     const clientKey = request.ip || request.socket.remoteAddress || "unknown";
     const now = Date.now();
     const current = attempts.get(clientKey);
     if (current && current.resetAt > now && current.count >= MAX_LOGIN_ATTEMPTS) {
-      return response.status(429).json({ message: "登录尝试次数过多，请 15 分钟后再试" });
+      return response.status(429).json({ code: "TOO_MANY_LOGIN_ATTEMPTS", message: "登录尝试次数过多，请 15 分钟后再试" });
     }
     if (current && current.resetAt <= now) attempts.delete(clientKey);
 
@@ -97,7 +97,7 @@ export function createAdminAuth(options: AdminAuthOptions = {}) {
         count: (previous?.resetAt || 0) > now ? previous!.count + 1 : 1,
         resetAt: (previous?.resetAt || 0) > now ? previous!.resetAt : now + LOGIN_WINDOW_MS
       });
-      return response.status(401).json({ message: "管理员密码不正确" });
+      return response.status(401).json({ code: "INVALID_ADMIN_PASSWORD", message: "管理员密码不正确" });
     }
 
     attempts.delete(clientKey);
@@ -112,8 +112,8 @@ export function createAdminAuth(options: AdminAuthOptions = {}) {
   }
 
   function requireAdmin(request: Request, response: Response, next: NextFunction) {
-    if (!configured) return response.status(503).json({ message: "管理员密码尚未配置，当前服务为浏览模式" });
-    if (!isAdmin(request)) return response.status(401).json({ message: "仅管理员可以执行此操作，请先进入管理模式" });
+    if (!configured) return response.status(503).json({ code: "ADMIN_NOT_CONFIGURED", message: "管理员密码尚未配置，当前服务为浏览模式" });
+    if (!isAdmin(request)) return response.status(401).json({ code: "ADMIN_REQUIRED", message: "仅管理员可以执行此操作，请先进入管理模式" });
     next();
   }
 

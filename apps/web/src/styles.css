@@ -206,6 +206,18 @@ button { color: inherit; }
 .drawer-form > .field + .field { margin-top: 18px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 14px; }
 .settings-brand-grid { margin-bottom: 18px; }
+.language-settings { padding-bottom: 22px; }
+.language-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 15px; }
+.language-options button { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 10px; color: #61736b; background: #f7f4ec; border: 1px solid #ddd7cb; border-radius: 7px; text-align: left; cursor: pointer; transition: .15s ease; }
+.language-options button:hover { border-color: #9bb3a8; background: #f0f4ef; }
+.language-options button.is-active { color: #234f42; background: #e6eee8; border-color: #7fa293; box-shadow: 0 0 0 2px rgba(62, 115, 95, .08); }
+.language-options strong { display: grid; place-items: center; flex: 0 0 29px; width: 29px; height: 29px; color: #8b7354; background: #eee5d7; border-radius: 50%; font-size: 10px; }
+.language-options button.is-active strong { color: white; background: #3d7160; }
+.language-options span { overflow: hidden; font-size: 10px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.settings-family-section { padding-top: 22px; border-top: 1px solid #e0dbd0; }
+.settings-family-heading { margin-bottom: 18px; }
+.settings-family-section > .field + .field { margin-top: 18px; }
+.settings-readonly-note { display: flex; align-items: center; gap: 9px; padding: 13px 15px; color: #687a72; background: #f2eee4; border: 1px solid #e1dbcf; border-radius: 7px; font-size: 10px; line-height: 1.5; }
 .field { display: flex; flex-direction: column; gap: 7px; color: #4f645b; font-size: 11px; font-weight: 600; }
 .field--wide { grid-column: 1 / -1; }
 .field input, .field select, .field textarea { width: 100%; color: #2b463d; background: #fffdf7; border: 1px solid #d8d3c8; border-radius: 6px; outline: 0; font-size: 13px; font-weight: 400; transition: .15s; }
@@ -362,4 +374,5 @@ button { color: inherit; }
   .kinship-trace-branch { grid-template-columns: 1fr; gap: 4px; }
   .kinship-query-panel > footer span { display: none; }
   .kinship-query-panel > footer { justify-content: flex-end; }
+  .language-options { grid-template-columns: 1fr; }
 }

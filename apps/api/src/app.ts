@@ -60,7 +60,7 @@ export function createApp(store: JsonStore, authOptions: AdminAuthOptions = {}) 
         updated = { ...database.people[index], ...input, updatedAt: new Date().toISOString() };
         database.people[index] = updated;
       });
-      if (!updated) return res.status(404).json({ message: "成员不存在" });
+      if (!updated) return res.status(404).json({ code: "MEMBER_NOT_FOUND", message: "成员不存在" });
       res.json(updated);
     } catch (error) { next(error); }
   });
@@ -75,7 +75,7 @@ export function createApp(store: JsonStore, authOptions: AdminAuthOptions = {}) 
           (relation) => relation.fromPersonId !== req.params.id && relation.toPersonId !== req.params.id
         );
       });
-      if (!found) return res.status(404).json({ message: "成员不存在" });
+      if (!found) return res.status(404).json({ code: "MEMBER_NOT_FOUND", message: "成员不存在" });
       res.status(204).send();
     } catch (error) { next(error); }
   });
@@ -84,11 +84,11 @@ export function createApp(store: JsonStore, authOptions: AdminAuthOptions = {}) 
     try {
       const input = relationInputSchema.parse(req.body);
       let relation!: Relation;
-      let validationError = "";
+      let validationError: { code: string; message: string } | undefined;
       await store.update((database) => {
         const ids = new Set(database.people.map((person) => person.id));
         if (!ids.has(input.fromPersonId) || !ids.has(input.toPersonId)) {
-          validationError = "关系中的成员不存在";
+          validationError = { code: "RELATION_MEMBER_NOT_FOUND", message: "关系中的成员不存在" };
           return;
         }
         const duplicate = database.relations.some((item) => {
@@ -98,13 +98,13 @@ export function createApp(store: JsonStore, authOptions: AdminAuthOptions = {}) 
           return item.type === input.type && (sameDirection || reverseDirection);
         });
         if (duplicate) {
-          validationError = "该关系已经存在";
+          validationError = { code: "RELATION_EXISTS", message: "该关系已经存在" };
           return;
         }
         relation = { ...input, id: nanoid(), createdAt: new Date().toISOString() };
         database.relations.push(relation);
       });
-      if (validationError) return res.status(400).json({ message: validationError });
+      if (validationError) return res.status(400).json(validationError);
       res.status(201).json(relation);
     } catch (error) { next(error); }
   });
@@ -116,7 +116,7 @@ export function createApp(store: JsonStore, authOptions: AdminAuthOptions = {}) 
         found = database.relations.some((relation) => relation.id === req.params.id);
         database.relations = database.relations.filter((relation) => relation.id !== req.params.id);
       });
-      if (!found) return res.status(404).json({ message: "关系不存在" });
+      if (!found) return res.status(404).json({ code: "RELATION_NOT_FOUND", message: "关系不存在" });
       res.status(204).send();
     } catch (error) { next(error); }
   });
@@ -125,7 +125,7 @@ export function createApp(store: JsonStore, authOptions: AdminAuthOptions = {}) 
     try {
       const body = req.body;
       if (!body || !Array.isArray(body.people) || !Array.isArray(body.relations)) {
-        return res.status(400).json({ message: "导入文件格式不正确" });
+        return res.status(400).json({ code: "INVALID_IMPORT_FORMAT", message: "导入文件格式不正确" });
       }
       await store.write({
         surname: String(body.surname || ""),
@@ -154,10 +154,10 @@ export function createApp(store: JsonStore, authOptions: AdminAuthOptions = {}) 
 
   app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     if (error instanceof ZodError) {
-      return res.status(400).json({ message: error.issues[0]?.message ?? "输入内容有误", issues: error.issues });
+      return res.status(400).json({ code: "VALIDATION_ERROR", message: error.issues[0]?.message ?? "输入内容有误", issues: error.issues });
     }
     console.error(error);
-    res.status(500).json({ message: "服务器内部错误" });
+    res.status(500).json({ code: "INTERNAL_ERROR", message: "服务器内部错误" });
   });
 
   return app;

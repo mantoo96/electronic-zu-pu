@@ -26,7 +26,8 @@ import { KinshipQueryPanel } from "./KinshipQueryPanel";
 import { KinshipTermSettings } from "./KinshipTermSettings";
 import { resolveMutualKinship } from "./kinship";
 import { createLineageView } from "./lineageView";
-import { genderLabels, nameAvatarText, relationLabels } from "./labels";
+import { getGenderLabels, getRelationLabels, nameAvatarText } from "./labels";
+import { localeOptions, localizeApiMessage, useI18n } from "./i18n";
 import { PersonForm } from "./PersonForm";
 import { RelationForm } from "./RelationForm";
 import type { AuthStatus, FamilyData, Person, PersonInput, Relation, RelationInput } from "./types";
@@ -34,6 +35,9 @@ import type { AuthStatus, FamilyData, Person, PersonInput, Relation, RelationInp
 type Drawer = "person" | "relation" | "settings" | "auth" | null;
 
 export default function App() {
+  const { locale, setLocale, t } = useI18n();
+  const genderLabels = getGenderLabels(t);
+  const relationLabels = getRelationLabels(t);
   const [family, setFamily] = useState<FamilyData | null>(null);
   const [auth, setAuth] = useState<AuthStatus | null>(null);
   const [selected, setSelected] = useState<Person>();
@@ -94,7 +98,7 @@ export default function App() {
   const isAdmin = auth?.isAdmin === true;
 
   function personName(id: string) {
-    return family?.people.find((person) => person.id === id)?.name || "未知成员";
+    return family?.people.find((person) => person.id === id)?.name || t("unknownMember");
   }
 
   function showError(reason: unknown) {
@@ -102,11 +106,15 @@ export default function App() {
       setAuth((current) => ({ configured: current?.configured ?? true, isAdmin: false }));
       setDrawer("auth");
     }
-    setError(reason instanceof Error ? reason.message : "操作失败，请稍后重试");
+    setError(reason instanceof ApiError
+      ? localizeApiMessage(reason.message, locale, reason.code)
+      : reason instanceof Error
+        ? localizeApiMessage(reason.message, locale)
+        : t("actionFailed"));
   }
 
   function openDrawer(nextDrawer: Exclude<Drawer, null>) {
-    if (nextDrawer !== "auth" && !isAdmin) return;
+    if (nextDrawer !== "auth" && nextDrawer !== "settings" && !isAdmin) return;
     setSidebarOpen(false);
     if (nextDrawer === "settings") setKinshipDraft({ ...(family?.kinshipOverrides || {}) });
     setDrawer(nextDrawer);
@@ -118,7 +126,7 @@ export default function App() {
     try {
       setAuth(await api.login(password));
       setDrawer(null);
-      setNotice("已进入管理模式");
+      setNotice(t("adminModeEntered"));
       window.setTimeout(() => setNotice(""), 3000);
     } catch (reason) { showError(reason); } finally { setBusy(false); }
   }
@@ -128,7 +136,7 @@ export default function App() {
       setAuth(await api.logout());
       setDrawer(null);
       setEditing(undefined);
-      setNotice("已切换到浏览模式");
+      setNotice(t("browseModeEntered"));
       window.setTimeout(() => setNotice(""), 3000);
     } catch (reason) { showError(reason); }
   }
@@ -182,7 +190,7 @@ export default function App() {
 
   async function deletePerson(person: Person) {
     if (!isAdmin) return;
-    if (!window.confirm(`确定删除“${person.name}”吗？与其相连的关系也会一并删除。`)) return;
+    if (!window.confirm(t("deletePersonConfirm", { name: person.name }))) return;
     setBusy(true);
     try {
       await api.deletePerson(person.id);
@@ -208,7 +216,7 @@ export default function App() {
 
   async function deleteRelation(relation: Relation) {
     if (!isAdmin) return;
-    if (!window.confirm("确定删除这条亲属关系吗？")) return;
+    if (!window.confirm(t("deleteRelationConfirm"))) return;
     try {
       await api.deleteRelation(relation.id);
       setFamily((current) => current && ({ ...current, relations: current.relations.filter((item) => item.id !== relation.id) }));
@@ -236,7 +244,7 @@ export default function App() {
       });
       setFamily(updated);
       setDrawer(null);
-      setNotice("族谱设置已保存");
+      setNotice(t("settingsSaved"));
       window.setTimeout(() => setNotice(""), 3000);
     } catch (reason) { showError(reason); } finally { setBusy(false); }
   }
@@ -255,7 +263,7 @@ export default function App() {
   async function importData(event: React.ChangeEvent<HTMLInputElement>) {
     if (!isAdmin) return;
     const file = event.target.files?.[0];
-    if (!file || !window.confirm("导入会覆盖当前全部族谱数据，确定继续吗？")) return;
+    if (!file || !window.confirm(t("importConfirm"))) return;
     try {
       const data = JSON.parse(await file.text()) as FamilyData;
       const imported = await api.importFamily(data);
@@ -264,7 +272,7 @@ export default function App() {
       setKinshipMode(false);
       setKinshipSelection([]);
       setLineageOnly(false);
-    } catch (reason) { showError(reason instanceof SyntaxError ? new Error("文件不是有效的 JSON 数据") : reason); }
+    } catch (reason) { showError(reason instanceof SyntaxError ? new Error(t("invalidJson")) : reason); }
     event.target.value = "";
   }
 
@@ -276,49 +284,49 @@ export default function App() {
   }
 
   if (!family) {
-    return <div className="loading-screen"><span>枝脉</span><p>{error || "正在展开家族脉络…"}</p></div>;
+    return <div className="loading-screen"><span>{t("loadingBrand")}</span><p>{error || t("loading")}</p></div>;
   }
 
   return (
     <div className="app-shell">
       <header className="topbar relative">
-        <button className="icon-button mobile-only" onClick={() => { setDrawer(null); setSelected(undefined); setSidebarOpen(true); }} aria-label="打开成员列表"><Menu /></button>
+        <button className="icon-button mobile-only" onClick={() => { setDrawer(null); setSelected(undefined); setSidebarOpen(true); }} aria-label={t("openMembers")}><Menu /></button>
         <div className="brand">
           <div className="brand__seal">{family.brandMark || family.surname || "枝"}</div>
-          <div><strong>{family.familyName}</strong><span>{family.subtitle || "电子族谱 · 枝脉相承"}</span></div>
+          <div><strong>{family.familyName}</strong><span>{family.subtitle || t("defaultSubtitle")}</span></div>
         </div>
         <div className="topbar__stats">
-          <span><UsersRound size={16} /> {family.people.length} 位成员</span>
-          <span><GitBranch size={16} /> {family.relations.length} 条关系</span>
+          <span><UsersRound size={16} /> {t("memberCount", { count: family.people.length })}</span>
+          <span><GitBranch size={16} /> {t("relationCount", { count: family.relations.length })}</span>
         </div>
         <div className="topbar__actions relative">
           <button
             className={`button button--soft admin-trigger ${isAdmin ? "is-active" : ""}`}
             onClick={isAdmin ? logoutAdmin : () => openDrawer("auth")}
-            title={isAdmin ? "退出管理模式" : "管理员登录"}
+            title={isAdmin ? t("exitAdmin") : t("adminLogin")}
           >
             {isAdmin ? <ShieldCheck size={17} /> : <LockKeyhole size={17} />}
-            {isAdmin ? "管理模式" : "浏览"}
+            {isAdmin ? t("adminMode") : t("browseMode")}
           </button>
           <button
             className={`button button--soft kinship-trigger ${kinshipMode ? "is-active" : ""}`}
             onClick={toggleKinshipMode}
             disabled={family.people.length < 2}
-            title="在主图中选两个人，查询双方称呼"
+            title={t("kinshipButtonTitle")}
           >
-            <Search size={17} /> {kinshipMode ? "退出查询" : "查称呼"}
+            <Search size={17} /> {kinshipMode ? t("exitQuery") : t("queryKinship")}
           </button>
           {family?.generationPoem && (
             <button
               className="button button--soft"
               onClick={() => setShowGenerationPopup(!showGenerationPopup)}
-              title="查看字辈"
+              title={t("viewGenerationPoem")}
             >
-              <BookOpenText size={17} /> 字辈
+              <BookOpenText size={17} /> {t("generationPoem")}
             </button>
           )}
-          {isAdmin && <button className="button button--soft" onClick={() => openDrawer("relation")} disabled={family.people.length < 2}><HeartHandshake size={17} /> 添加关系</button>}
-          {isAdmin && <button className="button button--primary" onClick={openNewPerson}><UserRoundPlus size={17} /> 添加成员</button>}
+          {isAdmin && <button className="button button--soft" onClick={() => openDrawer("relation")} disabled={family.people.length < 2}><HeartHandshake size={17} /> {t("addRelation")}</button>}
+          {isAdmin && <button className="button button--primary" onClick={openNewPerson}><UserRoundPlus size={17} /> {t("addMember")}</button>}
 
           {family?.generationPoem && showGenerationPopup && (
             <div className="generation-popover" onClick={(e) => e.stopPropagation()}>
@@ -340,11 +348,11 @@ export default function App() {
         </div>
       </header>
 
-      {sidebarOpen && <button className="sidebar-backdrop mobile-only" onClick={() => setSidebarOpen(false)} aria-label="关闭成员列表" />}
+      {sidebarOpen && <button className="sidebar-backdrop mobile-only" onClick={() => setSidebarOpen(false)} aria-label={t("closeMembers")} />}
 
       <aside className={`sidebar ${sidebarOpen ? "is-open" : ""}`}>
-        <div className="sidebar__mobile-title mobile-only"><strong>家族成员</strong><button className="icon-button" onClick={() => setSidebarOpen(false)}><X /></button></div>
-        <div className="search-box"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="搜索姓名、职业、居住地" /></div>
+        <div className="sidebar__mobile-title mobile-only"><strong>{t("familyMembers")}</strong><button className="icon-button" onClick={() => setSidebarOpen(false)}><X /></button></div>
+        <div className="search-box"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("searchPlaceholder")} /></div>
         <div className="member-list">
           {filteredPeople.map((person) => (
             <button
@@ -353,43 +361,44 @@ export default function App() {
               onClick={() => { setSelected(person); setSidebarOpen(false); }}
             >
               <span className={`member-row__avatar gender-${person.gender}`}>{person.avatar ? <img src={person.avatar} alt="" /> : nameAvatarText(person.name)}</span>
-              <span><strong>{person.name}</strong><small>{person.occupation || person.location || (person.generation !== undefined ? `第 ${person.generation} 代` : "资料待补充")}</small></span>
+              <span><strong>{person.name}</strong><small>{person.occupation || person.location || (person.generation !== undefined ? t("generationNumber", { count: person.generation }) : t("infoPending"))}</small></span>
             </button>
           ))}
-          {!filteredPeople.length && <div className="list-empty">{search ? "没有找到匹配成员" : "尚未添加成员"}</div>}
+          {!filteredPeople.length && <div className="list-empty">{search ? t("noSearchResults") : t("noMembers")}</div>}
         </div>
         <div className="sidebar__footer">
-          {isAdmin ? <>
-            <button onClick={exportData}><Download size={16} /> 导出备份</button>
-            <button onClick={() => importRef.current?.click()}><Upload size={16} /> 导入数据</button>
-            <button onClick={() => openDrawer("settings")}><Settings2 size={16} /> 族谱设置</button>
-          </> : <div className="readonly-note"><LockKeyhole size={14} /><span>当前为浏览模式</span></div>}
+          {isAdmin && <>
+            <button onClick={exportData}><Download size={16} /> {t("exportBackup")}</button>
+            <button onClick={() => importRef.current?.click()}><Upload size={16} /> {t("importData")}</button>
+          </>}
+          <button onClick={() => openDrawer("settings")}><Settings2 size={16} /> {t("settings")}</button>
+          {!isAdmin && <div className="readonly-note"><LockKeyhole size={14} /><span>{t("readOnlyMode")}</span></div>}
           <input ref={importRef} type="file" accept="application/json" hidden onChange={importData} />
         </div>
       </aside>
 
       <main className="graph-stage">
         <div className="graph-stage__caption">
-          <span>{kinshipMode ? "正在查询称呼" : lineageOnly ? "本家直系脉络" : "家族关系全景"}</span>
+          <span>{kinshipMode ? t("queryingKinship") : lineageOnly ? t("lineageOverview") : t("familyOverview")}</span>
           <small>{kinshipMode
             ? kinshipSelection.length === 2
-              ? "已显示双方称呼 · 点其他成员可重新开始"
+              ? t("queryCompleteHint")
               : kinshipSelection.length === 1
-                ? "请再点一位成员 · 再点已选成员可取消"
-                : "请依次点击主图中的两位成员"
+                ? t("querySecondHint")
+                : t("queryFirstHint")
             : lineageOnly
-              ? `已隐藏 ${lineageView?.hiddenPersonIds.size || 0} 位对象 · 点击成员查看资料`
-              : "滚轮缩放 · 拖动画布 · 点击成员查看资料"}</small>
+              ? t("lineageHint", { count: lineageView?.hiddenPersonIds.size || 0 })
+              : t("graphHint")}</small>
         </div>
-        <div className="graph-view-switch" role="group" aria-label="关系图展示模式">
-          <button type="button" className={!lineageOnly ? "is-active" : ""} onClick={() => switchGraphView(false)}>全谱</button>
+        <div className="graph-view-switch" role="group" aria-label={t("graphViewLabel")}>
+          <button type="button" className={!lineageOnly ? "is-active" : ""} onClick={() => switchGraphView(false)}>{t("fullTree")}</button>
           <button
             type="button"
             className={lineageOnly ? "is-active" : ""}
             onClick={() => switchGraphView(true)}
             disabled={!lineageView?.spouseRelationCount}
-            title="隐藏对象，仅展示本家上下代关系"
-          >纯直</button>
+            title={t("directLineTitle")}
+          >{t("directLine")}</button>
         </div>
         <FamilyGraph
           key={lineageOnly ? "lineage-left-to-right" : "full-top-to-bottom"}
@@ -415,29 +424,29 @@ export default function App() {
           <button className="detail-panel__close" onClick={() => setSelected(undefined)}><X size={20} /></button>
           <div className={`detail-hero gender-${selected.gender}`}>
             <div className="detail-avatar">{selected.avatar ? <img src={selected.avatar} alt="" /> : nameAvatarText(selected.name)}</div>
-            <div><span>{selected.generation !== undefined ? `第 ${selected.generation} 代` : genderLabels[selected.gender]}</span><h2>{selected.name}</h2><p>{selected.occupation || "家族成员"}</p></div>
+            <div><span>{selected.generation !== undefined ? t("generationNumber", { count: selected.generation }) : genderLabels[selected.gender]}</span><h2>{selected.name}</h2><p>{selected.occupation || t("familyMember")}</p></div>
           </div>
           {isAdmin && <div className="detail-actions">
-            <button onClick={() => { setEditing(selected); openDrawer("person"); }}><Pencil size={15} /> 编辑</button>
-            <button onClick={() => openDrawer("relation")}><Plus size={15} /> 连接</button>
-            <button className="danger" onClick={() => deletePerson(selected)} disabled={busy}><Trash2 size={15} /> 删除</button>
+            <button onClick={() => { setEditing(selected); openDrawer("person"); }}><Pencil size={15} /> {t("edit")}</button>
+            <button onClick={() => openDrawer("relation")}><Plus size={15} /> {t("connect")}</button>
+            <button className="danger" onClick={() => deletePerson(selected)} disabled={busy}><Trash2 size={15} /> {t("delete")}</button>
           </div>}
           <div className="detail-content">
-            {(selected.birthDate || selected.deathDate) && <div className="detail-line"><CalendarDays /><div><small>生卒</small><span>{selected.birthDate || "未知"} — {selected.isLiving ? "今" : selected.deathDate || "未知"}</span></div></div>}
-            {selected.location && <div className="detail-line"><MapPin /><div><small>居住地</small><span>{selected.location}</span></div></div>}
-            {selected.biography && <div className="biography"><h3><BookOpenText size={17} /> 人物小传</h3><p>{selected.biography}</p></div>}
+            {(selected.birthDate || selected.deathDate) && <div className="detail-line"><CalendarDays /><div><small>{t("lifespan")}</small><span>{selected.birthDate || t("unknown")} — {selected.isLiving ? t("present") : selected.deathDate || t("unknown")}</span></div></div>}
+            {selected.location && <div className="detail-line"><MapPin /><div><small>{t("location")}</small><span>{selected.location}</span></div></div>}
+            {selected.biography && <div className="biography"><h3><BookOpenText size={17} /> {t("biography")}</h3><p>{selected.biography}</p></div>}
             <div className="relations-list">
-              <h3><GitBranch size={17} /> 亲属关系 <span>{selectedRelations.length}</span></h3>
+              <h3><GitBranch size={17} /> {t("relationships")} <span>{selectedRelations.length}</span></h3>
               {selectedRelations.map((relation) => {
                 const otherId = relation.fromPersonId === selected.id ? relation.toPersonId : relation.fromPersonId;
                 return (
                   <div className="relation-row" key={relation.id}>
                     <div><strong>{personName(otherId)}</strong><span>{relation.label || relationLabels[relation.type]}</span></div>
-                    {isAdmin && <button onClick={() => deleteRelation(relation)} title="删除关系"><X size={15} /></button>}
+                    {isAdmin && <button onClick={() => deleteRelation(relation)} title={t("deleteRelationship")}><X size={15} /></button>}
                   </div>
                 );
               })}
-              {!selectedRelations.length && <p className="muted">尚未连接亲属关系</p>}
+              {!selectedRelations.length && <p className="muted">{t("noRelationships")}</p>}
             </div>
           </div>
         </aside>
@@ -447,7 +456,10 @@ export default function App() {
         <div className="drawer-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setDrawer(null)}>
           <section className="drawer">
             <header className="drawer__header">
-              <div><span>{drawer === "person" ? "MEMBER" : drawer === "relation" ? "RELATION" : drawer === "settings" ? "SETTINGS" : "ADMIN"}</span><h2>{drawer === "person" ? (editing ? "编辑成员资料" : "添加家族成员") : drawer === "relation" ? "建立亲属关系" : drawer === "settings" ? "族谱设置" : "管理员登录"}</h2></div>
+              <div>
+                <span>{drawer === "person" ? t("memberMeta") : drawer === "relation" ? t("relationMeta") : drawer === "settings" ? t("settingsMeta") : t("adminMeta")}</span>
+                <h2>{drawer === "person" ? (editing ? t("editMember") : t("addFamilyMember")) : drawer === "relation" ? t("createRelationship") : drawer === "settings" ? t("settings") : t("adminLogin")}</h2>
+              </div>
               <button className="icon-button" onClick={() => { setDrawer(null); setEditing(undefined); }}><X /></button>
             </header>
             {error && <div className="error-banner">{error}<button onClick={() => setError("")}><X size={14} /></button></div>}
@@ -456,23 +468,57 @@ export default function App() {
             {drawer === "relation" && <RelationForm people={family.people} initialFromId={selected?.id} busy={busy} onSubmit={saveRelation} onCancel={() => setDrawer(null)} />}
             {drawer === "settings" && (
               <form className="drawer-form" onSubmit={saveFamilyInfo}>
-                <div className="form-grid settings-brand-grid">
-                  <label className="field">
-                    <span>家族姓氏</span>
-                    <input name="surname" maxLength={20} defaultValue={family.surname} placeholder="例如：陈" />
-                  </label>
-                  <label className="field">
-                    <span>印章字 *</span>
-                    <input name="brandMark" maxLength={2} required defaultValue={family.brandMark || family.surname || "枝"} placeholder="例如：陈" />
-                  </label>
+                <section className="language-settings" aria-labelledby="language-settings-title">
+                  <div className="settings-section-heading">
+                    <div>
+                      <span id="language-settings-title">{t("languageAndDisplay")}</span>
+                      <p>{t("languageHelp")}</p>
+                    </div>
+                  </div>
+                  <div className="language-options" role="radiogroup" aria-label={t("languageAndDisplay")}>
+                    {localeOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={locale === option.value}
+                        className={locale === option.value ? "is-active" : ""}
+                        onClick={() => setLocale(option.value)}
+                      >
+                        <strong>{option.shortLabel}</strong><span>{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+                {isAdmin ? <>
+                  <section className="settings-family-section">
+                    <div className="settings-section-heading settings-family-heading">
+                      <div><span>{t("familySettings")}</span><p>{t("adminSettingsHelp")}</p></div>
+                    </div>
+                    <div className="form-grid settings-brand-grid">
+                      <label className="field">
+                        <span>{t("surname")}</span>
+                        <input name="surname" maxLength={20} defaultValue={family.surname} placeholder={t("surnamePlaceholder")} />
+                      </label>
+                      <label className="field">
+                        <span>{t("sealCharacter")}</span>
+                        <input name="brandMark" maxLength={2} required defaultValue={family.brandMark || family.surname || "枝"} placeholder={t("surnamePlaceholder")} />
+                      </label>
+                    </div>
+                    <label className="field"><span>{t("familyName")}</span><input name="familyName" required defaultValue={family.familyName} /></label>
+                    <label className="field"><span>{t("topSubtitle")}</span><input name="subtitle" maxLength={100} defaultValue={family.subtitle || t("defaultSubtitle")} placeholder={t("subtitlePlaceholder")} /></label>
+                    <label className="field"><span>{t("familyDescription")}</span><textarea name="description" rows={5} defaultValue={family.description} /></label>
+                    <label className="field"><span>{t("generationText")}</span><textarea name="generationPoem" rows={3} defaultValue={family.generationPoem} placeholder={t("generationPlaceholder")} /></label>
+                  </section>
+                  <KinshipTermSettings value={kinshipDraft} onChange={setKinshipDraft} />
+                  <div className="privacy-note"><strong>{t("privacyTitle")}</strong><p>{t("privacyBody")}</p></div>
+                </> : (
+                  <div className="settings-readonly-note"><LockKeyhole size={16} /><span>{t("adminSettingsHelp")}</span></div>
+                )}
+                <div className="form-actions">
+                  <button className="button button--ghost" type="button" onClick={() => setDrawer(null)}>{isAdmin ? t("cancel") : t("close")}</button>
+                  {isAdmin && <button className="button button--primary" disabled={busy}>{t("saveSettings")}</button>}
                 </div>
-                <label className="field"><span>族谱名称 *</span><input name="familyName" required defaultValue={family.familyName} /></label>
-                <label className="field"><span>顶部副标题</span><input name="subtitle" maxLength={100} defaultValue={family.subtitle || "电子族谱 · 枝脉相承"} placeholder="例如：电子族谱 · 血脉相承" /></label>
-                <label className="field"><span>族谱简介</span><textarea name="description" rows={5} defaultValue={family.description} /></label>
-                <label className="field"><span>字辈诗文</span><textarea name="generationPoem" rows={3} defaultValue={family.generationPoem} placeholder="例如：源远流长枝脉相承（无需空格，自动按字展示）" /></label>
-                <KinshipTermSettings value={kinshipDraft} onChange={setKinshipDraft} />
-                <div className="privacy-note"><strong>隐私提示</strong><p>本项目不会主动上传数据，但导出的备份包含全部成员资料。将仓库公开到 GitHub 时，请勿提交 data 目录中的私人数据。</p></div>
-                <div className="form-actions"><button className="button button--ghost" type="button" onClick={() => setDrawer(null)}>取消</button><button className="button button--primary" disabled={busy}>保存设置</button></div>
               </form>
             )}
           </section>

@@ -137,4 +137,23 @@ describe("kinship resolver", () => {
     expect(result.lineageTrace?.firstBranch.steps.at(-1)).toMatchObject({ name: "赵爱人", relation: "孙子的对象" });
     expect(result.lineageTrace?.secondBranch.steps.at(-1)?.name).toBe("陈堂侄");
   });
+
+  it("preserves a custom guardian term and keeps the reverse direction standard", () => {
+    const data = family();
+    data.relations = [...data.relations, {
+      id: "guardian-ego-stranger",
+      fromPersonId: "ego",
+      toPersonId: "stranger",
+      type: "guardian",
+      label: "Godfather",
+      createdAt: now
+    }];
+
+    const guardian = resolveKinship(data, "stranger", "ego");
+    expect(guardian).toMatchObject({ term: "Godfather", standardTerm: "监护人", canonicalKey: "guardian", isCustom: true });
+    expect(guardian.chain[0]).toMatchObject({ relation: "Godfather", canonicalKey: "guardian", isCustom: true });
+
+    const ward = resolveKinship(data, "ego", "stranger");
+    expect(ward).toMatchObject({ term: "被监护人", canonicalKey: "ward", isCustom: false });
+  });
 });

@@ -1,7 +1,7 @@
 import type { AuthStatus, FamilyData, Person, PersonInput, Relation, RelationInput } from "./types";
 
 export class ApiError extends Error {
-  constructor(message: string, public readonly status: number) {
+  constructor(message: string, public readonly status: number, public readonly code?: string) {
     super(message);
   }
 }
@@ -13,8 +13,8 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
     headers: { "Content-Type": "application/json", ...options?.headers }
   });
   if (!response.ok) {
-    const body = await response.json().catch(() => ({ message: "请求失败" }));
-    throw new ApiError(body.message || "请求失败", response.status);
+    const body = await response.json().catch(() => ({ message: "请求失败" })) as { message?: string; code?: string };
+    throw new ApiError(body.message || "请求失败", response.status, body.code);
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;

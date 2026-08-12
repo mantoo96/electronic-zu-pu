@@ -13,11 +13,13 @@ interface PathStep {
   toId: string;
   direction: Direction;
   label: string;
+  canonicalKey: string;
 }
 
 interface KinshipName {
   key: string;
   standardTerm: string;
+  customTerm?: string;
   note?: string;
 }
 
@@ -25,6 +27,8 @@ export interface KinshipChainItem {
   personId: string;
   name: string;
   relation: string;
+  canonicalKey?: string;
+  isCustom?: boolean;
 }
 
 export interface KinshipResult {
@@ -454,13 +458,19 @@ function classifyCore(directions: Direction[], nodes: Person[]): KinshipName {
   return { key: "extended_relative", standardTerm: "远房亲属", note: "具体称呼请参考关系路径" };
 }
 
-function stepLabel(direction: Direction, from: Person, to: Person) {
-  if (direction === "sibling") return siblingName(to, from).standardTerm;
-  return directName(direction, from, to).standardTerm;
+function stepName(direction: Direction, from: Person, to: Person) {
+  return direction === "sibling" ? siblingName(to, from) : directName(direction, from, to);
 }
 
 function addEdge(adjacency: Map<string, PathStep[]>, from: Person, to: Person, direction: Direction) {
-  adjacency.set(from.id, [...(adjacency.get(from.id) || []), { fromId: from.id, toId: to.id, direction, label: stepLabel(direction, from, to) }]);
+  const name = stepName(direction, from, to);
+  adjacency.set(from.id, [...(adjacency.get(from.id) || []), {
+    fromId: from.id,
+    toId: to.id,
+    direction,
+    label: name.standardTerm,
+    canonicalKey: name.key
+  }]);
 }
 
 function buildAdjacency(data: FamilyData) {
@@ -492,10 +502,12 @@ function findDirectSpecial(relations: Relation[], egoId: string, targetId: strin
     (item.fromPersonId === egoId && item.toPersonId === targetId)
     || (item.fromPersonId === targetId && item.toPersonId === egoId));
   if (!relation || !["guardian", "other"].includes(relation.type)) return undefined;
-  if (relation.type === "other") return { key: `custom_relation_${relation.id}`, standardTerm: relation.label || "自定义关系" };
+  if (relation.type === "other") {
+    return { key: `custom_relation_${relation.id}`, standardTerm: "自定义关系", customTerm: relation.label };
+  }
   return relation.fromPersonId === targetId
-    ? { key: "guardian", standardTerm: relation.label || "监护人" }
-    : { key: "ward", standardTerm: relation.label || "被监护人" };
+    ? { key: "guardian", standardTerm: "监护人", customTerm: relation.label }
+    : { key: "ward", standardTerm: "被监护人" };
 }
 
 function findPath(data: FamilyData, egoId: string, targetId: string): { steps: PathStep[]; people: Map<string, Person> } | undefined {
@@ -540,12 +552,15 @@ function findAncestorPaths(data: FamilyData, startId: string) {
       const directions = [...path.directions, edge.direction];
       const lineagePeople = [start, ...path.steps.map((step) => people.get(step.personId)!).filter(Boolean), edge.parent];
       const relativeName = classifyCore(directions, lineagePeople);
+      const customTerm = data.kinshipOverrides?.[relativeName.key]?.trim();
       paths.set(edge.parent.id, {
         directions,
         steps: [...path.steps, {
           personId: edge.parent.id,
           name: edge.parent.name,
-          relation: data.kinshipOverrides?.[relativeName.key]?.trim() || relativeName.standardTerm
+          relation: customTerm || relativeName.standardTerm,
+          canonicalKey: relativeName.key,
+          isCustom: Boolean(customTerm)
         }]
       });
       queue.push(edge.parent.id);
@@ -617,10 +632,13 @@ function findLineageTrace(data: FamilyData, firstId: string, secondId: string): 
       name: person.name,
       steps: descendantIds.map((personId) => {
         const descendant = data.people.find((item) => item.id === personId)!;
+        const result = resolveKinship(data, commonAncestor.id, personId);
         return {
           personId,
           name: descendant.name,
-          relation: resolveKinship(data, commonAncestor.id, personId).term
+          relation: result.term,
+          canonicalKey: result.canonicalKey,
+          isCustom: result.isCustom
         };
       })
     };
@@ -645,16 +663,26 @@ export function resolveKinship(data: FamilyData, egoId: string, targetId: string
     return { connected: false, term: "暂未找到关系", standardTerm: "暂未找到关系", isCustom: false, chain: [], note: "请先补充两人之间的父母、对象或兄弟姐妹关系" };
   }
 
+  const standard = directSpecial || classifyCore(path!.steps.map((step) => step.direction), [ego, ...path!.steps.map((step) => path!.people.get(step.toId)!)].filter(Boolean));
+  const regionalTerm = data.kinshipOverrides?.[standard.key]?.trim();
+  const customTerm = standard.customTerm?.trim() || regionalTerm;
+  const term = customTerm || standard.standardTerm;
   const chain = path?.steps.map((step) => ({
     personId: step.toId,
     name: path.people.get(step.toId)?.name || "未知成员",
-    relation: step.label
-  })) || [{ personId: target.id, name: target.name, relation: directSpecial!.standardTerm }];
-  const standard = directSpecial || classifyCore(path!.steps.map((step) => step.direction), [ego, ...path!.steps.map((step) => path!.people.get(step.toId)!)].filter(Boolean));
-  const customTerm = data.kinshipOverrides?.[standard.key]?.trim();
+    relation: step.label,
+    canonicalKey: step.canonicalKey,
+    isCustom: false
+  })) || [{
+    personId: target.id,
+    name: target.name,
+    relation: term,
+    canonicalKey: standard.key,
+    isCustom: Boolean(customTerm)
+  }];
   return {
     connected: true,
-    term: customTerm || standard.standardTerm,
+    term,
     standardTerm: standard.standardTerm,
     canonicalKey: standard.key,
     isCustom: Boolean(customTerm),

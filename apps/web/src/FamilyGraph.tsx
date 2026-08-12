@@ -18,7 +18,8 @@ import {
 } from "@xyflow/react";
 import dagre from "dagre";
 import type { FamilyData, Person, Relation } from "./types";
-import { nameAvatarText, relationLabels } from "./labels";
+import { getRelationLabels, nameAvatarText, relationLabels } from "./labels";
+import { useI18n } from "./i18n";
 import "@xyflow/react/dist/style.css";
 
 type LayoutDirection = "TB" | "LR";
@@ -27,6 +28,7 @@ type JunctionNode = Node<{ horizontal: boolean }, "junction">;
 type FamilyNode = PersonNode | JunctionNode;
 
 function ParentRelationEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style, data }: EdgeProps) {
+  const { t } = useI18n();
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -45,7 +47,7 @@ function ParentRelationEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosi
           className={`parent-edge-label nodrag nopan ${edgeData?.horizontal ? "is-horizontal" : ""}`}
           style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
         >
-          {customLabel || <><span>父母</span><b>{edgeData?.horizontal ? "→" : "↓"}</b><span>子女</span></>}
+          {customLabel || <><span>{t("graphParent")}</span><b>{edgeData?.horizontal ? "→" : "↓"}</b><span>{t("graphChild")}</span></>}
         </div>
       </EdgeLabelRenderer>
     </>
@@ -53,8 +55,9 @@ function ParentRelationEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosi
 }
 
 function PersonCard({ data }: NodeProps<PersonNode>) {
+  const { t } = useI18n();
   const { person } = data;
-  const years = [person.birthDate?.slice(0, 4), person.isLiving ? "今" : person.deathDate?.slice(0, 4)]
+  const years = [person.birthDate?.slice(0, 4), person.isLiving ? t("present") : person.deathDate?.slice(0, 4)]
     .filter(Boolean)
     .join(" — ");
   return (
@@ -71,8 +74,8 @@ function PersonCard({ data }: NodeProps<PersonNode>) {
       </div>
       <div className="person-node__content">
         <strong>{person.name}</strong>
-        <span>{person.occupation || years || "资料待补充"}</span>
-        {person.generation !== undefined && <em>第 {person.generation} 代</em>}
+        <span>{person.occupation || years || t("infoPending")}</span>
+        {person.generation !== undefined && <em>{t("generationNumber", { count: person.generation })}</em>}
       </div>
       {data.horizontal
         ? <Handle type="source" position={Position.Right} id="child-right" className="node-handle" />
@@ -102,7 +105,13 @@ function FamilyJunction({ data }: NodeProps<JunctionNode>) {
   );
 }
 
-export function layoutGraph(data: FamilyData, selectedId?: string, selectionIds: string[] = [], layoutDirection: LayoutDirection = "TB") {
+export function layoutGraph(
+  data: FamilyData,
+  selectedId?: string,
+  selectionIds: string[] = [],
+  layoutDirection: LayoutDirection = "TB",
+  translatedRelationLabels = relationLabels
+) {
   const horizontal = layoutDirection === "LR";
   const orient = (position: { x: number; y: number }) => horizontal
     ? { x: position.y * 1.5, y: position.x * 0.38 }
@@ -441,7 +450,7 @@ export function layoutGraph(data: FamilyData, selectedId?: string, selectionIds:
       target: spouseReversed ? relation.fromPersonId : relation.toPersonId,
       sourceHandle: horizontal ? "child-right" : isSpouse ? "spouse-right" : "child-bottom",
       targetHandle: horizontal ? "parent-left" : isSpouse ? "spouse-left" : "parent-top",
-      label: relation.type === "parent" ? undefined : relation.label || relationLabels[relation.type],
+      label: relation.type === "parent" ? undefined : relation.label || translatedRelationLabels[relation.type],
       type: relation.type === "parent" ? "parent" : isSpouse ? "straight" : "smoothstep",
       data: relation.type === "parent" ? { label: relation.label, horizontal } : undefined,
       animated: false,
@@ -462,7 +471,12 @@ interface Props {
 }
 
 export function FamilyGraph({ data, selectedId, selectionIds = [], layoutDirection = "TB", onSelect }: Props) {
-  const layout = useMemo(() => layoutGraph(data, selectedId, selectionIds, layoutDirection), [data, selectedId, selectionIds, layoutDirection]);
+  const { locale, t } = useI18n();
+  const translatedRelationLabels = getRelationLabels(t);
+  const layout = useMemo(
+    () => layoutGraph(data, selectedId, selectionIds, layoutDirection, translatedRelationLabels),
+    [data, selectedId, selectionIds, layoutDirection, locale]
+  );
   const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layout.edges);
 
@@ -474,9 +488,9 @@ export function FamilyGraph({ data, selectedId, selectionIds = [], layoutDirecti
   if (!data.people.length) {
     return (
       <div className="empty-state">
-        <div className="empty-state__tree">枝</div>
-        <h2>从第一位家人开始</h2>
-        <p>点击“添加成员”录入基础信息，再用“添加关系”连接彼此。</p>
+        <div className="empty-state__tree">{locale === "en" ? "F" : "枝"}</div>
+        <h2>{t("startWithFirst")}</h2>
+        <p>{t("emptyGraphHelp")}</p>
       </div>
     );
   }
