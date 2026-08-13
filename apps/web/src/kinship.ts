@@ -212,10 +212,10 @@ function ancestorName(nodes: Person[]): KinshipName {
   if (depth === 1) return directName("up", nodes[0], target);
   if (depth === 2) {
     const branch = first.gender === "female" ? "maternal" : "paternal";
-    const key = `${branch}_${target.gender === "female" ? "grandmother" : "grandfather"}`;
+    const key = `${branch}_${target.gender === "female" ? "grandmother" : target.gender === "male" ? "grandfather" : "grandparent"}`;
     const standardTerm = first.gender === "female"
-      ? target.gender === "female" ? "外婆" : "外公"
-      : target.gender === "female" ? "奶奶" : "爷爷";
+      ? target.gender === "female" ? "外婆" : target.gender === "male" ? "外公" : "外祖辈"
+      : target.gender === "female" ? "奶奶" : target.gender === "male" ? "爷爷" : "祖辈";
     return { key, standardTerm };
   }
   const generationNames = ["", "", "祖", "曾祖", "高祖", "天祖", "烈祖", "太祖", "远祖", "鼻祖"];
@@ -223,7 +223,8 @@ function ancestorName(nodes: Person[]): KinshipName {
   const maternalPrefix = first.gender === "female" ? "外" : "";
   const genderSuffix = target.gender === "female" ? "母" : target.gender === "male" ? "父" : "辈";
   const keyDepth = depth === 3 ? "great_grand" : `ancestor_${depth}`;
-  return { key: `${first.gender === "female" ? "maternal" : "paternal"}_${keyDepth}${target.gender === "female" ? "mother" : "father"}`, standardTerm: `${maternalPrefix}${generationName}${genderSuffix}` };
+  const genderKey = target.gender === "female" ? "mother" : target.gender === "male" ? "father" : "relative";
+  return { key: `${first.gender === "female" ? "maternal" : "paternal"}_${keyDepth}${genderKey}`, standardTerm: `${maternalPrefix}${generationName}${genderSuffix}` };
 }
 
 function descendantName(nodes: Person[]): KinshipName {
@@ -515,12 +516,13 @@ function findPath(data: FamilyData, egoId: string, targetId: string): { steps: P
   if (!people.has(egoId) || !people.has(targetId)) return undefined;
   const queue: Array<{ personId: string; steps: PathStep[] }> = [{ personId: egoId, steps: [] }];
   const visited = new Set([egoId]);
-  while (queue.length) {
-    const current = queue.shift()!;
+  let queueIndex = 0;
+  while (queueIndex < queue.length) {
+    const current = queue[queueIndex++];
     if (current.personId === targetId) return { steps: current.steps, people };
-    if (current.steps.length >= 12) continue;
     for (const edge of adjacency.get(current.personId) || []) {
       if (visited.has(edge.toId)) continue;
+      // 无权图 BFS 首次入队即是最短路径；此处标记还能避免环路重复扩展。
       visited.add(edge.toId);
       queue.push({ personId: edge.toId, steps: [...current.steps, edge] });
     }
@@ -543,10 +545,10 @@ function findAncestorPaths(data: FamilyData, startId: string) {
 
   const paths = new Map<string, { steps: KinshipChainItem[]; directions: Direction[] }>([[startId, { steps: [], directions: [] }]]);
   const queue = [startId];
-  while (queue.length) {
-    const personId = queue.shift()!;
+  let queueIndex = 0;
+  while (queueIndex < queue.length) {
+    const personId = queue[queueIndex++];
     const path = paths.get(personId)!;
-    if (path.steps.length >= 12) continue;
     for (const edge of parentEdges.get(personId) || []) {
       if (paths.has(edge.parent.id)) continue;
       const directions = [...path.directions, edge.direction];

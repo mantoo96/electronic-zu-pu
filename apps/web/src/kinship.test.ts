@@ -156,4 +156,49 @@ describe("kinship resolver", () => {
     const ward = resolveKinship(data, "ego", "stranger");
     expect(ward).toMatchObject({ term: "被监护人", canonicalKey: "ward", isCustom: false });
   });
+
+  it("preserves unknown-gender ancestor wording in the canonical key", () => {
+    const data = family();
+    data.people = [
+      { id: "ancestor", name: "陈祖辈", gender: "unknown", isLiving: false, createdAt: now, updatedAt: now },
+      { id: "middle-1", name: "陈一代", gender: "male", isLiving: true, createdAt: now, updatedAt: now },
+      { id: "middle-2", name: "陈二代", gender: "male", isLiving: true, createdAt: now, updatedAt: now },
+      { id: "descendant", name: "陈后人", gender: "male", isLiving: true, createdAt: now, updatedAt: now }
+    ];
+    data.relations = [
+      { id: "r1", fromPersonId: "ancestor", toPersonId: "middle-1", type: "parent", createdAt: now },
+      { id: "r2", fromPersonId: "middle-1", toPersonId: "middle-2", type: "parent", createdAt: now },
+      { id: "r3", fromPersonId: "middle-2", toPersonId: "descendant", type: "parent", createdAt: now }
+    ];
+
+    expect(resolveKinship(data, "descendant", "ancestor")).toMatchObject({
+      standardTerm: "曾祖辈",
+      canonicalKey: "paternal_great_grandrelative"
+    });
+  });
+
+  it("finds kinship paths longer than the previous twelve-edge limit", () => {
+    const data = family();
+    const root = { id: "deep-root", name: "共同祖先", gender: "male" as const, isLiving: false, createdAt: now, updatedAt: now };
+    const branches = ["left", "right"].flatMap((branch) => Array.from({ length: 8 }, (_, index) => ({
+      id: `${branch}-${index + 1}`,
+      name: `${branch}-${index + 1}`,
+      gender: "male" as const,
+      isLiving: true,
+      createdAt: now,
+      updatedAt: now
+    })));
+    data.people = [root, ...branches];
+    data.relations = ["left", "right"].flatMap((branch) => Array.from({ length: 8 }, (_, index) => ({
+      id: `${branch}-relation-${index + 1}`,
+      fromPersonId: index === 0 ? root.id : `${branch}-${index}`,
+      toPersonId: `${branch}-${index + 1}`,
+      type: "parent" as const,
+      createdAt: now
+    })));
+
+    const result = resolveKinship(data, "left-8", "right-8");
+    expect(result.connected).toBe(true);
+    expect(result.chain).toHaveLength(16);
+  });
 });
