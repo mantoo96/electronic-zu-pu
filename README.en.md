@@ -1,8 +1,29 @@
-# Branches · Digital Family Tree
+<div align="center">
+
+# 🌳 Branches · Digital Family Tree
+
+**Keep your family story alive on the internet — a self-hosted digital family tree**
 
 English | [简体中文](README.md)
 
-An open-source, self-hosted digital family tree. It provides member profiles, relationship management, and an interactive family graph designed to run on a personal computer, home NAS, or private server.
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-339933?logo=nodedotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-One--command%20deploy-2496ED?logo=docker&logoColor=white)
+![Self-hosted](https://img.shields.io/badge/Self--hosted-%E2%9C%93-brightgreen)
+
+An open-source, self-hosted digital family tree with member profiles, an auto-laid-out interactive family graph, and a "what do I call this relative?" kinship lookup. Runs on a personal computer, home NAS, or private server — your data stays yours.
+
+</div>
+
+## ✨ Highlights
+
+- 🧬 **Auto-laid-out family graph** — generations arranged automatically, with zoom, pan, and minimap
+- 🗣️ **"What should I call them?"** — pick two people and see how each addresses the other, with a verifiable relationship path
+- 📖 **Generation poems** — write your family's lineage poem into the tree, presented paragraph by paragraph
+- 🏠 **Your data, your rules** — JSON file storage with one-click export; nothing is uploaded to any cloud
+- 🐳 **One-command deployment** — run it on your NAS with Docker Compose and let the whole family visit
 
 ## Features
 

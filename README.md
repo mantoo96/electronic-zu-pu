@@ -1,8 +1,29 @@
-# 枝脉 · 电子族谱
+<div align="center">
+
+# 🌳 枝脉 · 电子族谱
+
+**把家族记忆搬上互联网 —— 可私有部署的电子族谱与亲属关系图**
 
 [English](README.en.md) | 简体中文
 
-一个开源、可私有部署的电子族谱项目。它提供成员资料录入、亲属关系连接和可交互关系图，适合在个人电脑、家庭 NAS 或私人服务器上运行。
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-339933?logo=nodedotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-%E4%B8%80%E9%94%AE%E9%83%A8%E7%BD%B2-2496ED?logo=docker&logoColor=white)
+![Self-hosted](https://img.shields.io/badge/Self--hosted-%E2%9C%93-brightgreen)
+
+一个开源、可私有部署的电子族谱项目：成员资料录入、亲属关系连接、可交互关系图，还能一键查出「这位亲戚我该叫ta什么」。适合跑在个人电脑、家庭 NAS 或私人服务器上，数据始终由你自己保管。
+
+</div>
+
+## ✨ 亮点
+
+- 🧬 **关系图自动布局** — 上下几代人自动分层，缩放、拖动、小地图一应俱全
+- 🗣️ **「我该叫ta什么？」** — 点选两位成员，立刻显示双方称呼，并给出可核对的关系路径
+- 📖 **字辈诗文** — 把家训字辈写进族谱，按段落优雅展示，标点保留在字间
+- 🏠 **数据自己保管** — JSON 文件存储 + 一键导出备份，不上传任何云端
+- 🐳 **一条命令部署** — Docker Compose 跑在 NAS 上，全家人都能访问
 
 ## 功能
 
